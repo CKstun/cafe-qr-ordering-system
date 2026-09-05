@@ -1,0 +1,21 @@
+# React / Node
+node_modules/
+dist/
+.env
+.env.*
+
+# PHP
+*.log
+
+# Uploads
+backend/uploads/
+
+# Local database files
+*.sql.zip
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
