@@ -16,23 +16,21 @@ try {
 
     $sql = "
         SELECT
-            menu_items.menu_item_id,
-            menu_items.product_name,
-            menu_items.description,
-            menu_items.price,
-            menu_items.image,
-            menu_items.is_available,
-            categories.category_name
-        FROM menu_items
-        INNER JOIN categories
-            ON menu_items.category_id = categories.category_id
-        ORDER BY categories.category_name, menu_items.product_name
+            m.menu_item_id,
+            m.product_name,
+            m.category_id,
+            c.category_name,
+            m.price
+        FROM menu_items m
+        INNER JOIN categories c
+            ON m.category_id = c.category_id
+        ORDER BY c.category_name, m.product_name
     ";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
 
-    $menuItems = $stmt->fetchAll();
+    $menuItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
         "success" => true,
@@ -45,6 +43,6 @@ try {
 
     echo json_encode([
         "success" => false,
-        "message" => "Failed to retrieve menu items."
+        "message" => $e->getMessage()
     ]);
 }

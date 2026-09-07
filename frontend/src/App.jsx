@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import CategoryFilter from "./components/CategoryFilter";
 import MenuCard from "./components/MenuCard";
+import CustomizationModal from "./components/CustomizationModal";
 
 function App() {
   const [menuItems, setMenuItems] = useState([]);
@@ -12,8 +13,17 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [customizations, setCustomizations] = useState([]);
+  const [selections, setSelections] = useState({});
+  const [loadingCustomizations, setLoadingCustomizations] =
+    useState(false);
+
+  // Load menu
   useEffect(() => {
-    fetch("http://localhost/cafe-qr-ordering-system/backend/api/menu.php")
+    fetch(
+      "http://localhost/cafe-qr-ordering-system/backend/api/menu.php"
+    )
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch menu.");
@@ -29,7 +39,9 @@ function App() {
         setMenuItems(result.data);
 
         const uniqueCategories = [
-          ...new Set(result.data.map((item) => item.category_name)),
+          ...new Set(
+            result.data.map((item) => item.category_name)
+          ),
         ];
 
         setCategories(uniqueCategories);
@@ -44,32 +56,90 @@ function App() {
   }, []);
 
   // Add item to cart
-  const handleAddToCart = (item) => {
-    setCart((currentCart) => {
-      const existingItem = currentCart.find(
-        (cartItem) =>
-          cartItem.menu_item_id === item.menu_item_id
+  const handleAddToCart = async (item) => {
+    try {
+      setLoadingCustomizations(true);
+      setError("");
+
+      const response = await fetch(
+        `http://localhost/cafe-qr-ordering-system/backend/api/customization.php?menu_item_id=${item.menu_item_id}`
       );
 
-      if (existingItem) {
-        return currentCart.map((cartItem) =>
-          cartItem.menu_item_id === item.menu_item_id
-            ? {
-                ...cartItem,
-                quantity: cartItem.quantity + 1,
-              }
-            : cartItem
-        );
+      if (!response.ok) {
+        throw new Error("Failed to fetch customizations.");
       }
 
-      return [
-        ...currentCart,
-        {
-          ...item,
-          quantity: 1,
-        },
-      ];
-    });
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error("Failed to load customizations.");
+      }
+
+      // No customization options
+      if (result.data.length === 0) {
+        setCart((currentCart) => {
+          const existingItem = currentCart.find(
+            (cartItem) =>
+              cartItem.menu_item_id === item.menu_item_id
+          );
+
+          if (existingItem) {
+            return currentCart.map((cartItem) =>
+              cartItem.menu_item_id === item.menu_item_id
+                ? {
+                    ...cartItem,
+                    quantity: cartItem.quantity + 1,
+                  }
+                : cartItem
+            );
+          }
+
+          return [
+            ...currentCart,
+            {
+              ...item,
+              quantity: 1,
+            },
+          ];
+        });
+
+        return;
+      }
+
+      // Has customization options
+      setSelectedItem(item);
+      setCustomizations(result.data);
+      setSelections({});
+    } catch (err) {
+      console.error(err);
+      setError("Unable to load customization options.");
+    } finally {
+      setLoadingCustomizations(false);
+    }
+  };
+
+  // Add customized item to cart
+  const handleAddCustomizedToCart = (
+    item,
+    selectedOptions,
+    finalPrice
+  ) => {
+    const customizationList =
+      Object.values(selectedOptions);
+
+    setCart((currentCart) => [
+      ...currentCart,
+      {
+        ...item,
+        price: finalPrice,
+        quantity: 1,
+        customizations: customizationList,
+      },
+    ]);
+
+    setSelectedItem(null);
+    setCustomizations([]);
+    setSelections({});
   };
 
   // Increase quantity
@@ -157,19 +227,21 @@ function App() {
           />
         </div>
 
-        {/* Menu */}
+        {/* Loading */}
         {loading && (
           <p className="text-center text-gray-500">
             Loading menu...
           </p>
         )}
 
+        {/* Error */}
         {error && (
           <p className="text-center text-red-600">
             {error}
           </p>
         )}
 
+        {/* Menu */}
         {!loading && !error && (
           <>
             {filteredItems.length === 0 ? (
@@ -192,6 +264,7 @@ function App() {
 
         {/* Cart */}
         <div className="mt-10 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
+
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">
               Your Cart
@@ -199,7 +272,8 @@ function App() {
 
             <span className="text-sm text-gray-500">
               {cart.reduce(
-                (total, item) => total + item.quantity,
+                (total, item) =>
+                  total + item.quantity,
                 0
               )}{" "}
               item(s)
@@ -212,26 +286,48 @@ function App() {
             </p>
           ) : (
             <div className="mt-5 space-y-4">
-              {cart.map((item) => (
+
+              {cart.map((item, index) => (
                 <div
-                  key={item.menu_item_id}
+                  key={`${item.menu_item_id}-${index}`}
                   className="flex items-center justify-between gap-4 border-b pb-4"
                 >
+
                   <div className="flex-1">
+
                     <h3 className="font-semibold text-gray-900">
                       {item.product_name}
                     </h3>
 
-                    <p className="text-sm text-gray-500">
-                      ₱{Number(item.price).toFixed(2)}
+                    {/* Customizations */}
+                    {item.customizations &&
+                      item.customizations.length > 0 && (
+                        <div className="mt-1 text-sm text-gray-500">
+                          {item.customizations.map(
+                            (customization, index) => (
+                              <div key={index}>
+                                {customization.option_name}
+                              </div>
+                            )
+                          )}
+                        </div>
+                      )}
+
+                    <p className="mt-1 text-sm text-gray-500">
+                      ₱
+                      {Number(item.price).toFixed(2)}
                     </p>
+
                   </div>
 
                   {/* Quantity */}
                   <div className="flex items-center gap-2">
+
                     <button
                       onClick={() =>
-                        decreaseQuantity(item.menu_item_id)
+                        decreaseQuantity(
+                          item.menu_item_id
+                        )
                       }
                       className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100"
                     >
@@ -244,31 +340,38 @@ function App() {
 
                     <button
                       onClick={() =>
-                        increaseQuantity(item.menu_item_id)
+                        increaseQuantity(
+                          item.menu_item_id
+                        )
                       }
                       className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100"
                     >
                       +
                     </button>
+
                   </div>
 
                   {/* Subtotal */}
                   <div className="w-20 text-right font-semibold">
                     ₱
                     {(
-                      Number(item.price) * item.quantity
+                      Number(item.price) *
+                      item.quantity
                     ).toFixed(2)}
                   </div>
 
                   {/* Remove */}
                   <button
                     onClick={() =>
-                      removeFromCart(item.menu_item_id)
+                      removeFromCart(
+                        item.menu_item_id
+                      )
                     }
                     className="text-sm text-red-500 hover:text-red-700"
                   >
                     Remove
                   </button>
+
                 </div>
               ))}
 
@@ -281,15 +384,37 @@ function App() {
                 </span>
               </div>
 
+              {/* Checkout */}
               <button
                 className="w-full rounded-lg bg-black px-4 py-3 font-medium text-white hover:bg-gray-800"
               >
                 Proceed to Checkout
               </button>
+
             </div>
           )}
         </div>
+
       </main>
+
+      {/* Customization Modal */}
+      {selectedItem && (
+        <CustomizationModal
+          item={selectedItem}
+          customizations={customizations}
+          selections={selections}
+          setSelections={setSelections}
+          onAddCustomized={
+            handleAddCustomizedToCart
+          }
+          onClose={() => {
+            setSelectedItem(null);
+            setCustomizations([]);
+            setSelections({});
+          }}
+        />
+      )}
+
     </div>
   );
 }
