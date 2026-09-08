@@ -16,6 +16,8 @@ function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [customizations, setCustomizations] = useState([]);
   const [selections, setSelections] = useState({});
+  const [customerName, setCustomerName] = useState("Cheska");
+  const [orderType, setOrderType] = useState("Dine-in");
   const [loadingCustomizations, setLoadingCustomizations] =
     useState(false);
 
@@ -203,7 +205,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header 
+        customerName={customerName}
+        orderType={orderType}
+      />
 
       <main className="mx-auto max-w-5xl px-4 py-6">
 
@@ -249,7 +254,7 @@ function App() {
                 No menu items found.
               </p>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredItems.map((item) => (
                   <MenuCard
                     key={item.menu_item_id}
