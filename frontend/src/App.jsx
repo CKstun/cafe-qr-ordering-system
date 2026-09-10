@@ -125,38 +125,27 @@ function App() {
   const handleAddCustomizedToCart = (
     item,
     selectedOptions,
-    finalPrice
+    finalPrice,
+    quantity = 1
   ) => {
-    const customizationList =
-      Object.values(selectedOptions);
+    const customizationList = Object.values(selectedOptions).filter(
+      (option) => option && typeof option === "object"
+    );
 
     setCart((currentCart) => [
       ...currentCart,
       {
         ...item,
         price: finalPrice,
-        quantity: 1,
+        quantity: quantity,
         customizations: customizationList,
+        request: selectedOptions.request || "",
       },
     ]);
 
     setSelectedItem(null);
     setCustomizations([]);
     setSelections({});
-  };
-
-  // Increase quantity
-  const increaseQuantity = (menuItemId) => {
-    setCart((currentCart) =>
-      currentCart.map((item) =>
-        item.menu_item_id === menuItemId
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-            }
-          : item
-      )
-    );
   };
 
   // Decrease quantity
@@ -418,9 +407,7 @@ function App() {
           customizations={customizations}
           selections={selections}
           setSelections={setSelections}
-          onAddCustomized={
-            handleAddCustomizedToCart
-          }
+          onAdd={handleAddCustomizedToCart}
           onClose={() => {
             setSelectedItem(null);
             setCustomizations([]);
