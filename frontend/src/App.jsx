@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import CategoryFilter from "./components/CategoryFilter";
 import MenuCard from "./components/MenuCard";
 import CustomizationModal from "./components/CustomizationModal";
+import searchIcon from "./assets/magnifying-glass-solid.png";
 
 function App() {
   const [menuItems, setMenuItems] = useState([]);
@@ -204,7 +205,7 @@ function App() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fffaf5]">
       <Header 
         customerName={customerName}
         orderType={orderType}
@@ -214,13 +215,21 @@ function App() {
 
         {/* Search */}
         <div className="mb-5">
-          <input
-            type="text"
-            placeholder="Search menu..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-gray-400"
-          />
+          <div className="flex items-center rounded-xl border border-[#e5ddd4] bg-white px-4 py-3 shadow-sm">
+            <img
+              src={searchIcon}
+              alt="Search"
+              className="mr-3 h-6 w-6 object-contain"
+            />
+
+            <input
+              type="text"
+              placeholder="Search Menu"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-transparent text-sm text-[#5f4637] outline-none placeholder:text-[#967966]"
+            />
+          </div>
         </div>
 
         {/* Categories */}

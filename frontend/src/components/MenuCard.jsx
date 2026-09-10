@@ -1,3 +1,5 @@
+import plusIcon from "../assets/plus-solid.png";
+
 function MenuCard({ item, onAddToCart }) {
   return (
     <div className="flex min-h-[140px] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e8dfd5] transition hover:shadow-md sm:min-h-[170px] sm:flex-col">
@@ -36,10 +38,13 @@ function MenuCard({ item, onAddToCart }) {
 
           <button
             onClick={() => onAddToCart(item)}
-            className="flex h-9 w-16 shrink-0 items-center justify-center rounded-xl bg-[#6f4e37] text-xl font-medium text-white transition hover:bg-[#5a3e2b] active:scale-95"
-            aria-label={`Add ${item.product_name} to cart`}
+            className="flex h-9 w-16 shrink-0 items-center justify-center rounded-xl bg-[#5a3e32] transition hover:bg-[#4a3027] active:scale-95"
           >
-            +
+            <img
+              src={plusIcon}
+              alt="Add to Cart"
+              className="h-5 w-5 object-contain"
+            />
           </button>
         </div>
       </div>
