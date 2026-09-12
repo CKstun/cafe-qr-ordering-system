@@ -39,13 +39,15 @@ try {
         FROM customization_options
         WHERE menu_item_id = ?
         AND is_available = 1
-        ORDER BY option_group, option_type, option_name
+        ORDER BY option_group, option_type, customization_id
     ";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$menuItemId]);
 
-    $customizations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $customizations = $stmt->fetchAll(
+        PDO::FETCH_ASSOC
+    );
 
     echo json_encode([
         "success" => true,
@@ -58,7 +60,7 @@ try {
 
     echo json_encode([
         "success" => false,
-        "message" => "Failed to retrieve customization options.",
-        "error" => $e->getMessage()
+        "message" => "Failed to retrieve customization options."
     ]);
 }
+?>

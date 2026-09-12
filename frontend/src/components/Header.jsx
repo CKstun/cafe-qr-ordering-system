@@ -1,43 +1,49 @@
-import logo from "../assets/cafe-pepita-logo.png";
+import logo from "../assets/logo.jpg";
 import cartIcon from "../assets/cart-shopping-solid.png";
 
-function Header({ customerName, orderType }) {
+function Header({
+  customerName,
+  orderType,
+  cartCount,
+  onCart,
+}) {
   return (
-    <header className="bg-[#fffaf5]">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+    <header className="sticky top-0 z-30 bg-[#f7eee1]/95 px-4 pb-3 pt-4 backdrop-blur sm:px-6">
+      <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-3xl bg-[#fffdf8] px-3 py-3 shadow-sm ring-1 ring-[#e6d8c3]">
+        <img
+          src={logo}
+          alt="Café Pepita Logo"
+          className="h-12 w-12 shrink-0 rounded-full object-cover"
+        />
 
-        {/* Logo + Café Name */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#e5ddd4] bg-white">
-            <img
-              src={logo}
-              alt="Café Pepita Logo"
-              className="h-full w-full object-contain"
-            />
-          </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-lg font-semibold text-[#46281b]">
+            Café Pepita
+          </h1>
 
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-[#000000]">
-              Café Pepita
-            </h1>
-
-            <p className="text-sm text-[#967966]">
-              {customerName && orderType
-                ? `${customerName} · ${orderType}`
-                : "Order your favorites"}
-            </p>
-          </div>
+          <p className="truncate text-xs text-[#8a7863]">
+            {customerName || "Guest"} ·{" "}
+            {orderType}
+          </p>
         </div>
 
-        {/* Cart */}
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1f1713]">
+        <button
+          type="button"
+          onClick={onCart}
+          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#5a3e32]"
+        >
           <img
             src={cartIcon}
             alt="Cart"
             className="h-5 w-5 object-contain"
           />
-        </div>
 
+          {cartCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#b23a3a] px-1 text-[10px] font-bold text-white">
+              {cartCount}
+            </span>
+          )}
+        </button>
       </div>
     </header>
   );
