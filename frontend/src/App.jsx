@@ -5,6 +5,7 @@ import MenuCard from "./components/MenuCard";
 import CustomizationModal from "./components/CustomizationModal";
 import backIcon from "./assets/back-icon.png";
 
+
 const API_BASE =
   "http://localhost/cafe-qr-ordering-system/backend/api";
 
@@ -321,10 +322,10 @@ function App() {
 
   const removeFromCart = (key) => {
     setCart((current) =>
-      current.filter(
-        (item) => item.key !== key
-      )
+      current.filter((item) => item.key !== key)
     );
+
+    showToast("Item removed from cart");
   };
 
   const placeOrder = async () => {
@@ -411,6 +412,19 @@ function App() {
     setScreen("menu");
   };
 
+  const cancelOrder = () => {
+    if (orderStatus !== "placed") {
+      return;
+    }
+
+    setOrder(null);
+    setOrderStatus("placed");
+    setPaymentStatus("Unpaid");
+    setScreen("menu");
+
+    showToast("Order cancelled.");
+  };
+
   const orderMore = () => {
     setScreen("menu");
     setOrder(null);
@@ -436,7 +450,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#f7eee1] text-[#3a2a1e]">
       {toast && (
-        <div className="fixed left-1/2 top-4 z-[100] -translate-x-1/2 rounded-full bg-[#46281b] px-5 py-3 text-sm font-medium text-white shadow-lg">
+        <div className="fixed left-1/2 top-4 z-[100] -translate-x-1/2 rounded-xl bg-[#46281b] px-6 py-3 text-sm font-medium text-white shadow-lg">
           {toast}
         </div>
       )}
@@ -633,15 +647,10 @@ function App() {
           order && (
             <TrackingScreen
               order={order}
-              orderStatus={
-                orderStatus
-              }
-              paymentStatus={
-                paymentStatus
-              }
-              onOrderMore={
-                orderMore
-              }
+              orderStatus={orderStatus}
+              paymentStatus={paymentStatus}
+              onCancel={cancelOrder}
+              onOrderMore={orderMore}
               onDone={endSession}
             />
           )}
@@ -743,7 +752,7 @@ function CustomerDetailsScreen({
             alt="Café Pepita"
             className="h-64 w-64 rounded-full object-cover shadow-sm"
           />
-          <h1 className="mt-4 text-[22px] font-semibold text-[#46281b]">
+          <h1 className="mt-4 text-[22px] font-bold text-[#46281b]">
             Welcome!
           </h1>
           <p className="mt-1 text-sm text-[#8a7863]">
@@ -841,7 +850,7 @@ function CartScreen({
           </button>
 
           <div>
-            <h1 className="text-2xl font-semibold text-[#46281b]">
+            <h1 className="mt-4 text-[22px] font-bold text-[#46281b]">
               Your Cart
             </h1>
             <p className="mt-1 text-sm text-[#8a7863]">
@@ -967,14 +976,14 @@ function CartScreen({
 
                     <button
                       type="button"
-                      onClick={() =>
-                        onRemove(
-                          item.key
-                        )
-                      }
-                      className="mt-3 text-xs font-medium text-red-600"
+                      onClick={() => onRemove(item.key)}
+                      className="mt-3 ml-auto flex items-center justify-center"
                     >
-                      Remove
+                      <img
+                        src="/src/assets/delete-icon.png"
+                        alt="Delete"
+                        className="h-5 w-5 object-contain"
+                      />
                     </button>
                   </div>
                 ))}
@@ -982,25 +991,51 @@ function CartScreen({
 
               <div className="mt-5 border-t border-[#e6d8c3] pt-4">
 
-                <div className="flex items-center justify-between text-lg font-bold">
-                  <span>Total</span>
-
-                  <span className="text-[#5a3e32]">
-                    {peso(total)}
-                  </span>
+              {/* ORDER SUMMARY */}
+              <div className="mb-4">
+                <div className="text-sm font-semibold text-[#46281b]">
+                  Order Summary
                 </div>
 
-                <button
-                  type="button"
-                  onClick={
-                    onCheckout
-                  }
-                  className="mt-4 w-full rounded-xl bg-[#5a3e32] py-4 text-sm font-semibold text-white"
-                >
-                  Proceed to Checkout
-                </button>
+                <div className="mt-2 space-y-1">
+                  {cart.map((item) => (
+                    <div
+                      key={item.key}
+                      className="flex justify-between text-sm text-[#8a7863]"
+                    >
+                      <span>
+                        {item.product_name} × {item.quantity}
+                      </span>
 
+                      <span>
+                        {peso(
+                          Number(item.price) *
+                            Number(item.quantity)
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {/* TOTAL */}
+              <div className="flex items-center justify-between text-lg font-bold">
+                <span>Total</span>
+
+                <span className="text-[#5a3e32]">
+                  {peso(total)}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={onCheckout}
+                className="mt-4 w-full rounded-xl bg-[#5a3e32] py-4 text-sm font-semibold text-white"
+              >
+                Proceed to Checkout
+              </button>
+
+</div>
             </>
           )}
         </div>
@@ -1065,7 +1100,7 @@ function PaymentScreen({
 
         {/* Header */}
         <div>
-          <h1 className="font-serif text-3xl font-bold text-[#2f2119]">
+          <h1 className="mt-4 text-[22px] font-bold text-[#46281b]">
             Payment
           </h1>
 
@@ -1248,7 +1283,7 @@ function PaymentScreen({
                 aria-label="Remove payment proof"
               >
                 <img
-                  src="/src/assets/remove-icon.png"
+                  src="/src/assets/xmark-solid.png"
                   alt="Remove"
                   className="h-7 w-7"
                 />
@@ -1284,6 +1319,7 @@ function TrackingScreen({
   order,
   orderStatus,
   paymentStatus,
+  onCancel,
   onOrderMore,
   onDone,
 }) {
@@ -1293,11 +1329,11 @@ function TrackingScreen({
     ["ready", "Ready for Pickup"],
   ];
 
-  const currentIndex =
-    statuses.findIndex(
-      ([key]) =>
-        key === orderStatus
-    );
+  const currentIndex = statuses.findIndex(
+    ([key]) => key === orderStatus
+  );
+
+  const canCancel = orderStatus === "placed";
 
   return (
     <div className="min-h-screen bg-[#f7eee1]">
@@ -1305,8 +1341,8 @@ function TrackingScreen({
 
         <div className="rounded-3xl bg-[#fffdf8] p-5 shadow-sm">
 
+          {/* ORDER HEADER */}
           <div className="flex items-start justify-between">
-
             <div>
               <div className="text-xs text-[#8a7863]">
                 ORDER NUMBER
@@ -1320,109 +1356,86 @@ function TrackingScreen({
             <div className="rounded-full bg-[#efe1cc] px-3 py-1 text-xs font-medium text-[#5a3e32]">
               {order.type}
             </div>
-
           </div>
 
+          {/* STATUS MESSAGE */}
           <div className="mt-6 rounded-2xl bg-[#efe1cc] p-4">
-
             <div className="font-semibold text-[#46281b]">
-              {orderStatus ===
-              "placed"
+              {orderStatus === "placed"
                 ? "Order Placed!"
-                : orderStatus ===
-                  "preparing"
+                : orderStatus === "preparing"
                 ? "Preparing your order"
                 : "Ready!"}
             </div>
 
             <div className="mt-1 text-xs text-[#8a7863]">
-              {orderStatus ===
-              "placed"
+              {orderStatus === "placed"
                 ? "We've received your order."
-                : orderStatus ===
-                  "preparing"
+                : orderStatus === "preparing"
                 ? "Our staff is preparing your order."
                 : "Your order is ready for pickup."}
             </div>
-
           </div>
 
+          {/* ORDER STATUS */}
           <div className="mt-6">
+            {statuses.map(([key, label], index) => {
+              const done = index <= currentIndex;
 
-            {statuses.map(
-              (
-                [key, label],
-                index
-              ) => {
-                const done =
-                  index <=
-                  currentIndex;
+              return (
+                <div
+                  key={key}
+                  className="flex gap-3"
+                >
+                  <div className="flex flex-col items-center">
 
-                return (
-                  <div
-                    key={key}
-                    className="flex gap-3"
-                  >
-
-                    <div className="flex flex-col items-center">
-
-                      <div
-                        className={`flex h-7 w-7 items-center justify-center rounded-full text-xs ${
-                          done
-                            ? "bg-[#5a3e32] text-white"
-                            : "bg-[#efe1cc] text-[#9c8873]"
-                        }`}
-                      >
-                        {done
-                          ? "✓"
-                          : "○"}
-                      </div>
-
-                      {index <
-                        statuses.length -
-                          1 && (
-                        <div
-                          className={`min-h-8 w-px ${
-                            index <
-                            currentIndex
-                              ? "bg-[#5a3e32]"
-                              : "bg-[#e6d8c3]"
-                          }`}
-                        />
-                      )}
-
+                    <div
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs ${
+                        done
+                          ? "bg-[#5a3e32] text-white"
+                          : "bg-[#efe1cc] text-[#9c8873]"
+                      }`}
+                    >
+                      {done ? "✓" : "○"}
                     </div>
 
-                    <div className="pb-5">
-
+                    {index < statuses.length - 1 && (
                       <div
-                        className={`text-sm font-medium ${
-                          done
-                            ? "text-[#3a2a1e]"
-                            : "text-[#9c8873]"
+                        className={`min-h-8 w-px ${
+                          index < currentIndex
+                            ? "bg-[#5a3e32]"
+                            : "bg-[#e6d8c3]"
                         }`}
-                      >
-                        {label}
-                      </div>
+                      />
+                    )}
 
-                      <div className="mt-1 text-xs text-[#8a7863]">
-                        {index <
-                        currentIndex
-                          ? "Completed"
-                          : index ===
-                            currentIndex
-                          ? "In progress"
-                          : "Waiting"}
-                      </div>
+                  </div>
 
+                  <div className="pb-5">
+                    <div
+                      className={`text-sm font-medium ${
+                        done
+                          ? "text-[#3a2a1e]"
+                          : "text-[#9c8873]"
+                      }`}
+                    >
+                      {label}
+                    </div>
+
+                    <div className="mt-1 text-xs text-[#8a7863]">
+                      {index < currentIndex
+                        ? "Completed"
+                        : index === currentIndex
+                        ? "In progress"
+                        : "Waiting"}
                     </div>
                   </div>
-                );
-              }
-            )}
-
+                </div>
+              );
+            })}
           </div>
 
+          {/* ORDER SUMMARY */}
           <div className="mt-2 rounded-2xl border border-[#e6d8c3] bg-white p-4">
 
             <div className="text-xs font-semibold tracking-wide text-[#9c8873]">
@@ -1430,73 +1443,63 @@ function TrackingScreen({
             </div>
 
             <div className="mt-3 space-y-2">
+              {order.items.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex justify-between gap-3 text-sm"
+                >
+                  <span>
+                    {item.product_name} × {item.quantity}
+                  </span>
 
-              {order.items.map(
-                (item) => (
-                  <div
-                    key={item.key}
-                    className="flex justify-between gap-3 text-sm"
-                  >
-
-                    <span>
-                      {
-                        item.product_name
-                      }{" "}
-                      ×
-                      {
-                        item.quantity
-                      }
-                    </span>
-
-                    <span className="font-medium">
-                      {peso(
-                        Number(
-                          item.price
-                        ) *
-                          Number(
-                            item.quantity
-                          )
-                      )}
-                    </span>
-
-                  </div>
-                )
-              )}
-
+                  <span className="font-medium">
+                    {peso(
+                      Number(item.price) *
+                        Number(item.quantity)
+                    )}
+                  </span>
+                </div>
+              ))}
             </div>
 
             <div className="mt-3 flex justify-between border-t border-[#e6d8c3] pt-3 font-semibold">
-
               <span>Total</span>
 
               <span className="text-[#5a3e32]">
-                {peso(
-                  order.total
-                )}
+                {peso(order.total)}
               </span>
-
             </div>
 
             <div className="mt-3 border-t border-[#e6d8c3] pt-3 text-xs text-[#8a7863]">
-              Payment ·{" "}
-              {
-                order.paymentMethod
-              }{" "}
-              · {paymentStatus}
+              Payment · {order.paymentMethod} · {paymentStatus}
             </div>
 
           </div>
 
+          {/* CANCEL ORDER */}
           <button
             type="button"
-            onClick={
-              onOrderMore
-            }
-            className="mt-5 w-full rounded-xl bg-[#5a3e32] py-4 text-sm font-semibold text-white"
+            onClick={onCancel}
+            disabled={!canCancel}
+            className={`mt-5 w-full rounded-xl py-4 text-sm font-semibold transition ${
+              canCancel
+                ? "bg-[#ead8c5] text-[#7b4d2e] hover:bg-[#dfc9b3]"
+                : "cursor-not-allowed bg-[#eee8e1] text-[#b5aaa0]"
+            }`}
+          >
+            Cancel Order
+          </button>
+
+          {/* ORDER MORE ITEMS */}
+          <button
+            type="button"
+            onClick={onOrderMore}
+            className="mt-2 w-full rounded-xl bg-[#5a3e32] py-4 text-sm font-semibold text-white"
           >
             Order More Items
           </button>
 
+          {/* DONE */}
           <button
             type="button"
             onClick={onDone}

@@ -62,7 +62,7 @@ function MenuCard({ item, onAddToCart }) {
             <button
               type="button"
               onClick={() => onAddToCart(item)}
-              className="flex h-9 w-16 shrink-0 items-center justify-center rounded-xl bg-[#5a3e32] transition hover:bg-[#4a3027] active:scale-95"
+              className="flex h-9 w-16 shrink-0 items-center justify-center rounded-full bg-[#5a3e32] transition hover:bg-[#4a3027] active:scale-95"
             >
               <img
                 src={plusIcon}
