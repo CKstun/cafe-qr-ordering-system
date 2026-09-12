@@ -12,14 +12,6 @@ const PRICE_REPLACING_GROUPS = [
   "Tray Size",
 ];
 
-const REQUIRED_GROUPS = [
-  "Flavor",
-  "Drink Variant",
-  "Size",
-  "Variant",
-  "Tray Size",
-];
-
 function CustomizationModal({
   item,
   customizations,
@@ -46,61 +38,121 @@ function CustomizationModal({
   );
 
   /*
-   * Find the actual price-replacing group.
-   *
-   * Flavor is NOT a price group.
-   * This is important for Flavored Latte:
-   *
-   * Flavor
-   *   - Roasted Almond
-   *   - Caramel Macchiato
-   *
-   * Drink Variant
-   *   - 12oz Regular
-   *   - 12oz Sub-oat
-   */
+    GROUP ORDER
+
+    1. Size / Drink Variant / Tray Size
+    2. Flavor
+    3. Add-ons
+    Other customization groups
+    4. Request
+    5. Quantity
+    6. Order Details
+    7. Total
+    8. Add Item
+  */
+
+  const orderedGroups = useMemo(() => {
+    const entries = Object.entries(groups);
+
+    const sizeGroups = [
+      "Size",
+      "Drink Variant",
+      "Variant",
+      "Tray Size",
+    ];
+
+    const flavorGroups = [
+      "Flavor",
+      "Flavors",
+    ];
+
+    const addOnGroups = [
+      "Add-ons",
+      "Add-ons",
+    ];
+
+    const sizeEntries = [];
+    const flavorEntries = [];
+    const addOnEntries = [];
+    const otherEntries = [];
+
+    entries.forEach(([group, options]) => {
+      if (sizeGroups.includes(group)) {
+        sizeEntries.push([group, options]);
+      } else if (flavorGroups.includes(group)) {
+        flavorEntries.push([group, options]);
+      } else if (addOnGroups.includes(group)) {
+        addOnEntries.push([group, options]);
+      } else {
+        otherEntries.push([group, options]);
+      }
+    });
+
+    return [
+      ...sizeEntries,
+      ...flavorEntries,
+      ...addOnEntries,
+      ...otherEntries,
+    ];
+  }, [groups]);
+
+  /*
+    A size / variant selection replaces the base item price.
+  */
   const replacingGroup = Object.keys(groups).find((group) =>
     PRICE_REPLACING_GROUPS.includes(group)
   );
 
+  const hasRequiredPriceSelection = Boolean(replacingGroup);
+
   /*
-   * Automatically select the base-price option.
-   *
-   * Example:
-   * Cappuccino base price = 119
-   * 12oz Regular = 119
-   *
-   * Therefore 12oz Regular becomes active automatically.
-   *
-   * Party Tray:
-   * menu_items.price = 0
-   * Small = 550
-   *
-   * Therefore Small becomes the default instead.
-   */
+    Check if the item has a Flavor group.
+    If it does, Flavor is required.
+  */
+  const flavorGroup = Object.keys(groups).find((group) =>
+    ["Flavor", "Flavors"].includes(group)
+  );
+
+  const hasFlavor = Boolean(flavorGroup);
+
+  /*
+    SIZE / VARIANT DEFAULT
+
+    When the item opens:
+    - Find the option whose price matches menu_items.price.
+    - That option becomes active.
+    - This prevents the base price from being added twice.
+  */
   useEffect(() => {
     if (!replacingGroup) return;
 
     const options = groups[replacingGroup] || [];
-
-    if (selections[replacingGroup]) return;
-
-    let defaultOption = null;
-
-    // First try to find an option matching the base price.
     const basePrice = getPrice(item.price);
 
-    if (basePrice > 0) {
-      defaultOption = options.find(
-        (option) => getPrice(option.price) === basePrice
-      );
+    if (selections[replacingGroup]) {
+      return;
     }
 
-    // If no matching base-price option exists,
-    // use the first available price option.
-    if (!defaultOption && options.length > 0) {
-      defaultOption = options[0];
-    }
+    /*
+      First try to find an option with the same price
+      as the item's base price.
+    */
+    const basePriceOption = options.find(
+      (option) => getPrice(option.price) === basePrice
+    );
+
+    /*
+      If no exact base-price option exists,
+      try Regular as a fallback.
+    */
+    const regularOption = options.find((option) =>
+      String(option.option_name || "")
+        .toLowerCase()
+        .includes("regular")
+    );
+
+    const defaultOption =
+      basePriceOption || regularOption;
 
     if (defaultOption) {
       setSelections((current) => ({
@@ -111,14 +163,16 @@ function CustomizationModal({
   }, [
     replacingGroup,
     groups,
+    item.price,
     selections,
     setSelections,
-    item.price,
   ]);
 
   const handleSelect = (group, option) => {
     setSelections((current) => {
-      // Add-ons allow multiple selections.
+      /*
+        Add-ons allow multiple selections.
+      */
       if (group === "Add-ons") {
         const currentAddOns = Array.isArray(current[group])
           ? current[group]
@@ -126,7 +180,8 @@ function CustomizationModal({
 
         const exists = currentAddOns.some(
           (selected) =>
-            selected.customization_id === option.customization_id
+            selected.customization_id ===
+            option.customization_id
         );
 
         return {
@@ -141,7 +196,9 @@ function CustomizationModal({
         };
       }
 
-      // All other groups allow one selection.
+      /*
+        Other options allow one selection.
+      */
       return {
         ...current,
         [group]: option,
@@ -150,44 +207,15 @@ function CustomizationModal({
   };
 
   /*
-   * Required validation.
-   *
-   * Flavor is required when the item has a Flavor group.
-   * Size/Drink Variant/etc. is required when the item has
-   * one of those groups.
-   */
-  const missingRequiredGroups = REQUIRED_GROUPS.filter((group) => {
-    if (!groups[group]) return false;
+    PRICE CALCULATION
 
-    const selected = selections[group];
-
-    if (group === "Add-ons") {
-      return false;
-    }
-
-    return !selected;
-  });
-
-  const canAddToCart = missingRequiredGroups.length === 0;
-
+    - Start with 0.
+    - Selected size/variant replaces menu_items.price.
+    - Add-ons are added.
+    - Flavor is FREE / 0 and does not affect price.
+    - Request does not affect price.
+  */
   const calculatePrice = () => {
-    /*
-     * PRICING RULE
-     *
-     * 1. Start at ZERO.
-     * 2. Selected size/variant replaces the base price.
-     * 3. Add-ons are added on top.
-     * 4. Flavor does NOT add any price.
-     * 5. Request does NOT affect price.
-     *
-     * For example:
-     *
-     * Latte = 119
-     * 12oz Regular = 119
-     *
-     * Result = 119, NOT 238.
-     */
-
     let price = 0;
 
     const selectedMainOption = replacingGroup
@@ -196,11 +224,17 @@ function CustomizationModal({
 
     if (selectedMainOption) {
       price = getPrice(selectedMainOption.price);
-    } else if (!replacingGroup) {
+    } else if (!hasRequiredPriceSelection) {
+      /*
+        If there is no size/variant group,
+        use the menu item's base price.
+      */
       price = getPrice(item.price);
     }
 
-    // Add-ons are added on top.
+    /*
+      Add-ons
+    */
     const selectedAddOns = Array.isArray(
       selections["Add-ons"]
     )
@@ -212,26 +246,28 @@ function CustomizationModal({
     });
 
     /*
-     * Other paid customization groups.
-     *
-     * IMPORTANT:
-     * Flavor is intentionally excluded because
-     * Flavor has no price.
-     */
-    Object.entries(selections).forEach(([group, value]) => {
-      if (
-        group === "request" ||
-        group === "Add-ons" ||
-        group === replacingGroup ||
-        group === "Flavor"
-      ) {
-        return;
-      }
+      Other paid options.
 
-      if (value && typeof value === "object") {
-        price += getPrice(value.price);
+      Flavor is intentionally not added because
+      flavor options have price 0.
+    */
+    Object.entries(selections).forEach(
+      ([group, value]) => {
+        if (
+          group === "request" ||
+          group === "Add-ons" ||
+          group === replacingGroup ||
+          group === "Flavor" ||
+          group === "Flavors"
+        ) {
+          return;
+        }
+
+        if (value && typeof value === "object") {
+          price += getPrice(value.price);
+        }
       }
-    });
+    );
 
     return price;
   };
@@ -239,22 +275,56 @@ function CustomizationModal({
   const unitPrice = calculatePrice();
   const total = unitPrice * quantity;
 
+  /*
+    VALIDATION
+
+    Size is required when a size / variant group exists.
+
+    Flavor is required when a Flavor group exists.
+  */
+  const isSizeSelected = replacingGroup
+    ? Boolean(selections[replacingGroup])
+    : true;
+
+  const isFlavorSelected = hasFlavor
+    ? Boolean(selections[flavorGroup])
+    : true;
+
+  const canAddToCart =
+    isSizeSelected && isFlavorSelected;
+
   const handleAdd = () => {
-    if (!canAddToCart) {
+    if (!isSizeSelected) {
       return;
     }
 
-    onAdd(item, selections, unitPrice, quantity);
+    if (!isFlavorSelected) {
+      return;
+    }
+
+    onAdd(
+      item,
+      selections,
+      unitPrice,
+      quantity
+    );
   };
 
   const getGroupTitle = (group) => {
     if (
-      group === "Drink Variant" ||
-      group === "Size" ||
-      group === "Variant" ||
-      group === "Tray Size"
+      ["Size", "Drink Variant", "Variant", "Tray Size"].includes(
+        group
+      )
     ) {
       return "SIZE";
+    }
+
+    if (["Flavor", "Flavors"].includes(group)) {
+      return "FLAVOR";
+    }
+
+    if (group === "Add-ons") {
+      return "ADD-ONS";
     }
 
     return group.toUpperCase();
@@ -266,11 +336,17 @@ function CustomizationModal({
     ? selections["Add-ons"]
     : [];
 
-  const selectedOptions = Object.entries(selections).filter(
+  /*
+    Selected options for Order Details.
+
+    Flavor and Add-ons are shown here.
+  */
+  const selectedOptions = Object.entries(
+    selections
+  ).filter(
     ([group, value]) =>
       group !== "request" &&
       group !== "Add-ons" &&
-      group !== "Flavor" &&
       group !== replacingGroup &&
       value &&
       typeof value === "object"
@@ -283,7 +359,6 @@ function CustomizationModal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 sm:flex sm:items-center sm:justify-center sm:p-4">
       <div className="min-h-full w-full bg-[#fbf6f0] sm:min-h-0 sm:max-h-[90vh] sm:max-w-md sm:overflow-y-auto sm:rounded-3xl">
-
         {/* Image */}
         <div className="relative h-52 w-full overflow-hidden sm:h-60">
           {item.image ? (
@@ -322,92 +397,116 @@ function CustomizationModal({
         </div>
 
         <div className="px-5 pb-8 pt-5">
+          {/* =========================
+              1. SIZE
+              2. FLAVOR
+              3. ADD-ONS
+              ========================= */}
+          {orderedGroups.map(([group, options]) => {
+            const isSize = PRICE_REPLACING_GROUPS.includes(
+              group
+            );
 
-          {/* Customization Groups */}
-          {Object.entries(groups).map(([group, options]) => (
-            <div key={group} className="mb-6">
+            const isFlavor =
+              group === "Flavor" ||
+              group === "Flavors";
 
-              <h3 className="mb-3 text-sm font-medium tracking-wide text-[#8a6d5a]">
-                {getGroupTitle(group)}
-                {REQUIRED_GROUPS.includes(group) && (
-                  <span className="ml-1 text-red-500">*</span>
-                )}
-              </h3>
+            const isAddOn = group === "Add-ons";
 
+            return (
               <div
-                className={
-                  PRICE_REPLACING_GROUPS.includes(group)
-                    ? "grid grid-cols-2 gap-3"
-                    : "flex flex-wrap gap-2"
-                }
+                key={group}
+                className="mb-6"
               >
-                {options.map((option) => {
-                  const selected =
-                    group === "Add-ons"
+                <h3 className="mb-3 text-sm font-medium tracking-wide text-[#8a6d5a]">
+                  {getGroupTitle(group)}
+                </h3>
+
+                <div
+                  className={
+                    isSize
+                      ? "grid grid-cols-2 gap-3"
+                      : "flex flex-wrap gap-2"
+                  }
+                >
+                  {options.map((option) => {
+                    const selected = isAddOn
                       ? selectedAddOns.some(
                           (selectedOption) =>
                             selectedOption.customization_id ===
                             option.customization_id
                         )
-                      : selections[group]?.customization_id ===
+                      : selections[group]
+                          ?.customization_id ===
                         option.customization_id;
 
-                  const isSize =
-                    PRICE_REPLACING_GROUPS.includes(group);
-
-                  const isFlavor = group === "Flavor";
-
-                  const isAddOn = group === "Add-ons";
-
-                  return (
-                    <button
-                      type="button"
-                      key={option.customization_id}
-                      onClick={() =>
-                        handleSelect(group, option)
-                      }
-                      className={`transition ${
-                        isSize
-                          ? "w-full rounded-2xl border px-4 py-3 text-center"
-                          : "rounded-full border px-4 py-2 text-sm"
-                      } ${
-                        selected
-                          ? "border-[#8b572f] bg-[#8b572f] text-white"
-                          : "border-[#e3dbd3] bg-white text-[#3b2f2f] hover:border-[#8b572f]"
-                      }`}
-                    >
-                      <div className="font-medium">
-                        {option.option_name}
-                      </div>
-
-                      {/*
-                       * NO PRICE for:
-                       *
-                       * Flavor
-                       * Add-ons
-                       *
-                       * Their prices should not appear
-                       * beside the customization buttons.
-                       */}
-                      {isSize && !isFlavor && !isAddOn && (
-                        <div
-                          className={`mt-1 text-xs ${
-                            selected
-                              ? "text-white/80"
-                              : "text-[#8a7b70]"
-                          }`}
-                        >
-                          ₱{getPrice(option.price).toFixed(2)}
+                    return (
+                      <button
+                        type="button"
+                        key={option.customization_id}
+                        onClick={() =>
+                          handleSelect(
+                            group,
+                            option
+                          )
+                        }
+                        className={`transition ${
+                          isSize
+                            ? "w-full rounded-2xl border px-4 py-3 text-center"
+                            : "rounded-full border px-4 py-2 text-sm"
+                        } ${
+                          selected
+                            ? "border-[#8b572f] bg-[#8b572f] text-white"
+                            : "border-[#e3dbd3] bg-white text-[#3b2f2f] hover:border-[#8b572f]"
+                        }`}
+                      >
+                        <div className="font-medium">
+                          {option.option_name}
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
 
-          {/* Request */}
+                        {/* 
+                          DO NOT DISPLAY PRICE
+                          for Flavor or Add-ons.
+                        */}
+                        {isSize && (
+                          <div
+                            className={`mt-1 text-xs ${
+                              selected
+                                ? "text-white/80"
+                                : "text-[#8a7b70]"
+                            }`}
+                          >
+                            ₱
+                            {getPrice(
+                              option.price
+                            ).toFixed(2)}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Validation message */}
+                {isSize && !isSizeSelected && (
+                  <p className="mt-2 text-xs text-red-600">
+                    Please select a size.
+                  </p>
+                )}
+
+                {isFlavor &&
+                  !isFlavorSelected && (
+                    <p className="mt-2 text-xs text-red-600">
+                      Please select a flavor.
+                    </p>
+                  )}
+              </div>
+            );
+          })}
+
+          {/* =========================
+              4. REQUEST
+              ========================= */}
           <div className="mb-6">
             <h3 className="mb-3 text-sm font-medium tracking-wide text-[#8a6d5a]">
               REQUEST
@@ -428,7 +527,9 @@ function CustomizationModal({
             />
           </div>
 
-          {/* Quantity */}
+          {/* =========================
+              5. QUANTITY
+              ========================= */}
           <div className="mb-5">
             <h3 className="mb-3 text-sm font-medium tracking-wide text-[#8a6d5a]">
               QUANTITY
@@ -439,7 +540,10 @@ function CustomizationModal({
                 type="button"
                 onClick={() =>
                   setQuantity((current) =>
-                    Math.max(1, current - 1)
+                    Math.max(
+                      1,
+                      current - 1
+                    )
                   )
                 }
                 disabled={quantity === 1}
@@ -455,7 +559,10 @@ function CustomizationModal({
               <button
                 type="button"
                 onClick={() =>
-                  setQuantity((current) => current + 1)
+                  setQuantity(
+                    (current) =>
+                      current + 1
+                  )
                 }
                 className="flex h-11 w-16 items-center justify-center rounded-full bg-[#f0e7de] text-xl text-[#3b2f2f]"
               >
@@ -464,14 +571,15 @@ function CustomizationModal({
             </div>
           </div>
 
-          {/* Order Details */}
+          {/* =========================
+              6. ORDER DETAILS
+              ========================= */}
           <div className="mb-5 rounded-2xl bg-white p-4">
             <h3 className="mb-4 text-sm font-medium tracking-wide text-[#8a6d5a]">
               ORDER DETAILS
             </h3>
 
             <div className="text-sm">
-
               {/* Header */}
               <div className="mb-2 flex items-center justify-between border-b border-[#eee5dc] pb-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-[#9b8f82]">
@@ -498,54 +606,63 @@ function CustomizationModal({
                 </div>
 
                 <span className="shrink-0 font-medium text-[#3b2f2f]">
-                  ₱{unitPrice.toFixed(2)}
+                  ₱
+                  {selectedSize
+                    ? getPrice(
+                        selectedSize.price
+                      ).toFixed(2)
+                    : getPrice(
+                        item.price
+                      ).toFixed(2)}
                 </span>
               </div>
 
-              {/* Flavor */}
-              {selections.Flavor && (
-                <div className="flex items-start justify-between gap-4 py-2">
-                  <span className="min-w-0 text-[#85776b]">
-                    Flavor
-                  </span>
+              {/* Other Selected Options */}
+              {selectedOptions.map(
+                ([group, option]) => (
+                  <div
+                    key={group}
+                    className="flex items-start justify-between gap-4 py-2"
+                  >
+                    <span className="min-w-0 text-[#85776b]">
+                      {option.option_name}
+                    </span>
 
-                  <span className="max-w-[65%] text-right font-medium text-[#3b2f2f]">
-                    {selections.Flavor.option_name}
-                  </span>
-                </div>
+                    <span className="shrink-0 font-medium text-[#3b2f2f]">
+                      {getPrice(
+                        option.price
+                      ) > 0
+                        ? `₱${getPrice(
+                            option.price
+                          ).toFixed(2)}`
+                        : ""}
+                    </span>
+                  </div>
+                )
               )}
 
-              {/* Other Selected Options */}
-              {selectedOptions.map(([group, option]) => (
-                <div
-                  key={group}
-                  className="flex items-start justify-between gap-4 py-2"
-                >
-                  <span className="min-w-0 text-[#85776b]">
-                    {option.option_name}
-                  </span>
-
-                  <span className="shrink-0 font-medium text-[#3b2f2f]">
-                    ₱{getPrice(option.price).toFixed(2)}
-                  </span>
-                </div>
-              ))}
-
               {/* Add-ons */}
-              {selectedAddOns.map((option) => (
-                <div
-                  key={option.customization_id}
-                  className="flex items-start justify-between gap-4 py-2"
-                >
-                  <span className="min-w-0 text-[#85776b]">
-                    {option.option_name}
-                  </span>
+              {selectedAddOns.map(
+                (option) => (
+                  <div
+                    key={
+                      option.customization_id
+                    }
+                    className="flex items-start justify-between gap-4 py-2"
+                  >
+                    <span className="min-w-0 text-[#85776b]">
+                      {option.option_name}
+                    </span>
 
-                  <span className="shrink-0 font-medium text-[#3b2f2f]">
-                    ₱{getPrice(option.price).toFixed(2)}
-                  </span>
-                </div>
-              ))}
+                    <span className="shrink-0 font-medium text-[#3b2f2f]">
+                      ₱
+                      {getPrice(
+                        option.price
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                )
+              )}
 
               {/* Request */}
               {selections.request?.trim() && (
@@ -573,7 +690,9 @@ function CustomizationModal({
             </div>
           </div>
 
-          {/* Total */}
+          {/* =========================
+              7. TOTAL
+              ========================= */}
           <div className="mb-4 flex items-center justify-between">
             <span className="text-sm text-[#8a6d5a]">
               TOTAL
@@ -584,37 +703,29 @@ function CustomizationModal({
             </span>
           </div>
 
-          {/* Validation Message */}
-          {!canAddToCart && (
-            <p className="mb-3 text-center text-sm text-red-500">
-              Please select{" "}
-              {missingRequiredGroups
-                .map((group) =>
-                  group === "Drink Variant" ||
-                  group === "Size" ||
-                  group === "Variant" ||
-                  group === "Tray Size"
-                    ? "Size"
-                    : group
-                )
-                .join(" and ")}{" "}
-              before adding to cart.
-            </p>
-          )}
-
-          {/* Add to Cart */}
+          {/* =========================
+              8. ADD ITEM
+              ========================= */}
           <button
             type="button"
             onClick={handleAdd}
             disabled={!canAddToCart}
-            className={`w-full rounded-2xl px-5 py-4 text-base font-medium text-white shadow-sm transition active:scale-[0.98] ${
+            className={`w-full rounded-2xl px-5 py-4 text-base font-medium text-white shadow-sm transition ${
               canAddToCart
-                ? "bg-[#8b572f] hover:bg-[#754725]"
+                ? "bg-[#8b572f] hover:bg-[#754725] active:scale-[0.98]"
                 : "cursor-not-allowed bg-[#b9aaa0]"
             }`}
           >
-            Add to Cart · ₱{total.toFixed(2)}
+            Add Item · ₱
+            {total.toFixed(2)}
           </button>
+
+          {!canAddToCart && (
+            <p className="mt-2 text-center text-xs text-red-600">
+              Please select the required options before
+              adding this item.
+            </p>
+          )}
         </div>
       </div>
     </div>

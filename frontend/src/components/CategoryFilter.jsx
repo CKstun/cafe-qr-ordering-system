@@ -8,7 +8,10 @@ function CategoryFilter({
   ];
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2">
+    <div
+      className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden"
+      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+    >
       <button
         type="button"
         onClick={() =>

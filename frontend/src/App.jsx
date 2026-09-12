@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import CategoryFilter from "./components/CategoryFilter";
 import MenuCard from "./components/MenuCard";
 import CustomizationModal from "./components/CustomizationModal";
+import backIcon from "./assets/back-icon.png";
 
 const API_BASE =
   "http://localhost/cafe-qr-ordering-system/backend/api";
@@ -15,9 +16,11 @@ const peso = (value) =>
 
 function App() {
   const [screen, setScreen] = useState("welcome");
+
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [dessertType, setDessertType] = useState(null);
   const [search, setSearch] = useState("");
 
   const [cart, setCart] = useState([]);
@@ -44,7 +47,9 @@ function App() {
 
   const showToast = (message) => {
     setToast(message);
+
     window.clearTimeout(window.__pepitaToast);
+
     window.__pepitaToast = window.setTimeout(
       () => setToast(""),
       2600
@@ -56,7 +61,9 @@ function App() {
       try {
         setLoading(true);
 
-        const response = await fetch(`${API_BASE}/menu.php`);
+        const response = await fetch(
+          `${API_BASE}/menu.php`
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch menu.");
@@ -99,7 +106,8 @@ function App() {
   const cartCount = useMemo(
     () =>
       cart.reduce(
-        (total, item) => total + Number(item.quantity || 0),
+        (total, item) =>
+          total + Number(item.quantity || 0),
         0
       ),
     [cart]
@@ -124,7 +132,9 @@ function App() {
           ? true
           : item.category_name === selectedCategory;
 
-      const searchMatch = String(item.product_name || "")
+      const searchMatch = String(
+        item.product_name || ""
+      )
         .toLowerCase()
         .includes(search.toLowerCase());
 
@@ -138,6 +148,10 @@ function App() {
 
   const selectCategory = (category) => {
     setSelectedCategory(category);
+
+    if (category !== "Desserts") {
+      setDessertType(null);
+    }
   };
 
   const openItem = async (item) => {
@@ -157,14 +171,17 @@ function App() {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch customizations.");
+        throw new Error(
+          "Failed to fetch customizations."
+        );
       }
 
       const result = await response.json();
 
       if (!result.success) {
         throw new Error(
-          result.message || "Failed to load customizations."
+          result.message ||
+            "Failed to load customizations."
         );
       }
 
@@ -182,6 +199,7 @@ function App() {
       setSelections({});
     } catch (err) {
       console.error(err);
+
       setError(
         "Unable to load customization options."
       );
@@ -208,7 +226,9 @@ function App() {
       },
     ]);
 
-    showToast(`Added ${item.product_name} to cart`);
+    showToast(
+      `Added ${item.product_name} to cart`
+    );
   };
 
   const handleAddCustomizedToCart = (
@@ -224,7 +244,8 @@ function App() {
         ([group, value]) =>
           group !== "request" &&
           value &&
-          ((Array.isArray(value) && value.length > 0) ||
+          ((Array.isArray(value) &&
+            value.length > 0) ||
             (!Array.isArray(value) &&
               typeof value === "object"))
       )
@@ -263,7 +284,9 @@ function App() {
     setCustomizations([]);
     setSelections({});
 
-    showToast(`Added ${item.product_name} to cart`);
+    showToast(
+      `Added ${item.product_name} to cart`
+    );
   };
 
   const increaseQuantity = (key) => {
@@ -272,7 +295,8 @@ function App() {
         item.key === key
           ? {
               ...item,
-              quantity: Number(item.quantity) + 1,
+              quantity:
+                Number(item.quantity) + 1,
             }
           : item
       )
@@ -286,7 +310,8 @@ function App() {
           item.key === key
             ? {
                 ...item,
-                quantity: Number(item.quantity) - 1,
+                quantity:
+                  Number(item.quantity) - 1,
               }
             : item
         )
@@ -296,7 +321,9 @@ function App() {
 
   const removeFromCart = (key) => {
     setCart((current) =>
-      current.filter((item) => item.key !== key)
+      current.filter(
+        (item) => item.key !== key
+      )
     );
   };
 
@@ -321,18 +348,25 @@ function App() {
 
     setOrder(newOrder);
     setOrderStatus("placed");
+
     setPaymentStatus(
       paymentMethod === "Cash"
         ? "Unpaid"
         : "For Verification"
     );
+
     setScreen("tracking");
 
-    showToast(`Order #${orderNumber} received.`);
+    showToast(
+      `Order #${orderNumber} received.`
+    );
   };
 
   useEffect(() => {
-    if (screen !== "tracking" || !order) {
+    if (
+      screen !== "tracking" ||
+      !order
+    ) {
       return;
     }
 
@@ -343,22 +377,34 @@ function App() {
     const timer = setTimeout(() => {
       if (orderStatus === "placed") {
         setOrderStatus("preparing");
-      } else if (orderStatus === "preparing") {
+      } else if (
+        orderStatus === "preparing"
+      ) {
         setOrderStatus("ready");
-        showToast("Your order is ready for pickup!");
+
+        showToast(
+          "Your order is ready for pickup!"
+        );
       }
     }, 4200);
 
-    return () => clearTimeout(timer);
-  }, [screen, order, orderStatus]);
+    return () =>
+      clearTimeout(timer);
+  }, [
+    screen,
+    order,
+    orderStatus,
+  ]);
 
   const startOrdering = () => {
-    setScreen("welcome");
+    setScreen("details");
   };
 
   const continueToMenu = () => {
     if (!customerName.trim()) {
-      showToast("Please enter your name.");
+      showToast(
+        "Please enter your name."
+      );
       return;
     }
 
@@ -381,6 +427,7 @@ function App() {
     setCustomerName("");
     setSearch("");
     setSelectedCategory("All");
+    setDessertType(null);
     setPaymentMethod("Cash");
     setGcashProof(null);
     setScreen("welcome");
@@ -395,28 +442,47 @@ function App() {
       )}
 
       <div className="mx-auto min-h-screen w-full max-w-[1100px]">
+
+        {/* =========================
+            WELCOME / SPLASH SCREEN
+        ========================= */}
         {screen === "welcome" && (
           <WelcomeScreen
+            onStart={startOrdering}
+          />
+        )}
+
+        {/* =========================
+            CUSTOMER DETAILS
+        ========================= */}
+        {screen === "details" && (
+          <CustomerDetailsScreen
             name={customerName}
             setName={setCustomerName}
             orderType={orderType}
             setOrderType={setOrderType}
-            onStart={startOrdering}
+            onBack={() => setScreen("welcome")}
             onContinue={continueToMenu}
           />
         )}
 
+        {/* =========================
+            MENU
+        ========================= */}
         {screen === "menu" && (
           <>
             <Header
               customerName={customerName}
               orderType={orderType}
               cartCount={cartCount}
-              onCart={() => setScreen("cart")}
+              onCart={() =>
+                setScreen("cart")
+              }
             />
 
             <main className="px-4 py-5 sm:px-6 lg:px-8">
               <div className="mx-auto max-w-6xl">
+
                 <div className="mb-5">
                   <div className="flex items-center rounded-2xl border border-[#e6d8c3] bg-[#fffdf8] px-4 py-3 shadow-sm">
                     <img
@@ -429,7 +495,9 @@ function App() {
                       type="text"
                       value={search}
                       onChange={(e) =>
-                        setSearch(e.target.value)
+                        setSearch(
+                          e.target.value
+                        )
                       }
                       placeholder="Search Menu"
                       className="w-full bg-transparent text-sm outline-none placeholder:text-[#9c8873]"
@@ -439,9 +507,25 @@ function App() {
 
                 <CategoryFilter
                   categories={categories}
-                  selectedCategory={selectedCategory}
-                  onSelectCategory={selectCategory}
+                  selectedCategory={
+                    selectedCategory
+                  }
+                  onSelectCategory={
+                    selectCategory
+                  }
                 />
+
+                {/* Dessert category */}
+                {selectedCategory ===
+                  "Desserts" && (
+                  <div className="mt-5 rounded-3xl bg-[#efe1cc] p-4">
+                    <div className="text-center">
+                      <h2 className="font-semibold text-[#46281b]">
+                        Desserts
+                      </h2>
+                    </div>
+                  </div>
+                )}
 
                 {loading && (
                   <p className="py-12 text-center text-sm text-[#8a7863]">
@@ -466,68 +550,119 @@ function App() {
                 {!loading &&
                   !error &&
                   filteredItems.length > 0 && (
-                    <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {filteredItems.map((item) => (
+                  <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredItems.map(
+                      (item) => (
                         <MenuCard
-                          key={item.menu_item_id}
+                          key={
+                            item.menu_item_id
+                          }
                           item={item}
-                          onAddToCart={openItem}
+                          onAddToCart={
+                            openItem
+                          }
                         />
-                      ))}
-                    </div>
-                  )}
+                      )
+                    )}
+                  </div>
+                )}
               </div>
             </main>
           </>
         )}
 
+        {/* =========================
+            CART
+        ========================= */}
         {screen === "cart" && (
           <CartScreen
             customerName={customerName}
             orderType={orderType}
             cart={cart}
             total={cartTotal}
-            onBack={() => setScreen("menu")}
-            onIncrease={increaseQuantity}
-            onDecrease={decreaseQuantity}
-            onRemove={removeFromCart}
-            onCheckout={() => setScreen("payment")}
+            onBack={() =>
+              setScreen("menu")
+            }
+            onIncrease={
+              increaseQuantity
+            }
+            onDecrease={
+              decreaseQuantity
+            }
+            onRemove={
+              removeFromCart
+            }
+            onCheckout={() =>
+              setScreen("payment")
+            }
           />
         )}
 
+        {/* =========================
+            PAYMENT
+        ========================= */}
         {screen === "payment" && (
           <PaymentScreen
             customerName={customerName}
             orderType={orderType}
             cart={cart}
             total={cartTotal}
-            paymentMethod={paymentMethod}
-            setPaymentMethod={setPaymentMethod}
+            paymentMethod={
+              paymentMethod
+            }
+            setPaymentMethod={
+              setPaymentMethod
+            }
             gcashProof={gcashProof}
-            setGcashProof={setGcashProof}
-            onBack={() => setScreen("cart")}
-            onPlaceOrder={placeOrder}
+            setGcashProof={
+              setGcashProof
+            }
+            onBack={() =>
+              setScreen("cart")
+            }
+            onPlaceOrder={
+              placeOrder
+            }
           />
         )}
 
-        {screen === "tracking" && order && (
-          <TrackingScreen
-            order={order}
-            orderStatus={orderStatus}
-            paymentStatus={paymentStatus}
-            onOrderMore={orderMore}
-            onDone={endSession}
-          />
-        )}
+        {/* =========================
+            TRACKING
+        ========================= */}
+        {screen === "tracking" &&
+          order && (
+            <TrackingScreen
+              order={order}
+              orderStatus={
+                orderStatus
+              }
+              paymentStatus={
+                paymentStatus
+              }
+              onOrderMore={
+                orderMore
+              }
+              onDone={endSession}
+            />
+          )}
       </div>
 
+      {/* =========================
+          CUSTOMIZATION MODAL
+      ========================= */}
       {selectedItem && (
         <CustomizationModal
           item={selectedItem}
-          customizations={customizations}
+          customizations={
+            customizations
+          }
           selections={selections}
-          setSelections={setSelections}
-          onAdd={handleAddCustomizedToCart}
+          setSelections={
+            setSelections
+          }
+          onAdd={
+            handleAddCustomizedToCart
+          }
           onClose={() => {
             setSelectedItem(null);
             setCustomizations([]);
@@ -547,86 +682,134 @@ function App() {
   );
 }
 
-function WelcomeScreen({
+
+/* =========================================================
+   WELCOME / SPLASH SCREEN
+========================================================= */
+
+function WelcomeScreen({ onStart }) {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#f7eee1] px-8 text-center">
+      <img
+        src="/src/assets/logo.jpg"
+        alt="Café Pepita"
+        className="h-64 w-64 rounded-full object-cover shadow-md"
+      />
+
+      <div className="mt-6 text-[11px] font-medium tracking-[0.25em] text-[#9c8873]">
+        SIP THE MOMENT
+      </div>
+
+      <button
+        type="button"
+        onClick={onStart}
+        className="mt-14 w-full max-w-[280px] rounded-xl bg-[#5a3e32] py-4 text-sm font-semibold text-white transition hover:bg-[#46281b] active:scale-[0.98]"
+      >
+        Start Ordering
+      </button>
+    </div>
+  );
+}
+
+
+/* =========================================================
+   CUSTOMER DETAILS SCREEN
+========================================================= */
+
+function CustomerDetailsScreen({
   name,
   setName,
   orderType,
   setOrderType,
+  onBack,
   onContinue,
 }) {
+  const canContinue = name.trim().length > 0;
+
   return (
-    <div className="flex min-h-screen items-center justify-center px-5 py-8">
-      <div className="w-full max-w-md rounded-[30px] bg-[#fffdf8] p-7 shadow-xl">
-        <div className="text-center">
+    <div className="flex min-h-screen flex-col bg-[#f7eee1] px-6 pb-8 pt-6">
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-2 flex items-center gap-1 text-sm font-medium text-[#8a7863]"
+      >
+        <span aria-hidden="true">‹</span> Back
+      </button>
+
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <div className="flex flex-col items-center text-center">
           <img
             src="/src/assets/logo.jpg"
             alt="Café Pepita"
-            className="mx-auto h-28 w-28 rounded-full object-cover"
+            className="h-64 w-64 rounded-full object-cover shadow-sm"
           />
-
-          <h1 className="mt-5 text-2xl font-semibold text-[#46281b]">
-            Welcome to Café Pepita
+          <h1 className="mt-4 text-[22px] font-semibold text-[#46281b]">
+            Welcome!
           </h1>
-
-          <p className="mt-2 text-sm text-[#8a7863]">
-            Tell us your name and order type to start.
+          <p className="mt-1 text-sm text-[#8a7863]">
+            Tell us your name so we know whose order is whose.
           </p>
         </div>
 
-        <div className="mt-8">
-          <label className="text-xs font-semibold tracking-wide text-[#9c8873]">
+        <div className="mt-9 w-full max-w-sm">
+          <label className="text-[11px] font-semibold tracking-wide text-[#9c8873]">
             YOUR NAME
           </label>
-
           <input
             type="text"
             value={name}
-            onChange={(e) =>
-              setName(e.target.value)
-            }
-            placeholder="Enter your name"
-            className="mt-2 w-full rounded-2xl border border-[#e6d8c3] bg-[#f7eee1] px-4 py-3 text-sm outline-none focus:border-[#5a3e32]"
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Barbara"
+            className="mt-2 w-full rounded-xl bg-[#efe1cc] px-4 py-3 text-[15px] text-[#3a2a1e] outline-none placeholder:text-[#9c8873]"
           />
         </div>
 
-        <div className="mt-6">
-          <label className="text-xs font-semibold tracking-wide text-[#9c8873]">
+        <div className="mt-6 w-full max-w-sm">
+          <label className="text-[11px] font-semibold tracking-wide text-[#9c8873]">
             ORDER TYPE
           </label>
-
           <div className="mt-2 flex gap-3">
-            {["Dine-in", "Take-out"].map(
-              (type) => (
+            {["Dine-in", "Take-out"].map((type) => {
+              const active = orderType === type;
+              return (
                 <button
                   key={type}
                   type="button"
-                  onClick={() =>
-                    setOrderType(type)
-                  }
-                  className={`flex-1 rounded-full border px-4 py-3 text-sm font-medium ${
-                    orderType === type
-                      ? "border-[#5a3e32] bg-[#5a3e32] text-white"
-                      : "border-[#9b8f82] bg-white text-[#5a3e32]"
+                  onClick={() => setOrderType(type)}
+                  className={`flex-1 rounded-full py-3 text-[14px] font-medium transition-colors ${
+                    active
+                      ? "bg-[#5a3e32] text-white"
+                      : "border border-[#e6d8c3] bg-white text-[#3a2a1e]"
                   }`}
                 >
                   {type}
                 </button>
-              )
-            )}
+              );
+            })}
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onContinue}
-          className="mt-8 w-full rounded-full bg-[#5a3e32] py-4 text-sm font-semibold text-white transition hover:bg-[#46281b]"
-        >
-          View Menu →
-        </button>
+        <div className="mt-10 w-full max-w-sm">
+          <button
+            type="button"
+            disabled={!canContinue}
+            onClick={onContinue}
+            className={`w-full rounded-xl py-3.5 text-[15px] font-semibold text-white transition-opacity ${
+              canContinue ? "bg-[#5a3e32]" : "bg-[#d9c6ac] opacity-90"
+            }`}
+          >
+            View Menu →
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
+
+/* =========================================================
+   CART SCREEN
+========================================================= */
 
 function CartScreen({
   customerName,
@@ -642,22 +825,32 @@ function CartScreen({
   return (
     <div className="min-h-screen bg-[#f7eee1]">
       <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6">
-        <button
-          type="button"
-          onClick={onBack}
-          className="mb-5 text-sm font-medium text-[#8a7863]"
-        >
-          ← Back to Menu
-        </button>
+
+        <div className="mb-5 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back to Menu"
+            className="flex h-6 w-6 shrink-0 items-center justify-center"
+          >
+            <img
+              src={backIcon}
+              alt=""
+              className="h-full w-full object-contain"
+            />
+          </button>
+
+          <div>
+            <h1 className="text-2xl font-semibold text-[#46281b]">
+              Your Cart
+            </h1>
+            <p className="mt-1 text-sm text-[#8a7863]">
+              {customerName || "Guest"} • {orderType}
+            </p>
+          </div>
+        </div>
 
         <div className="rounded-3xl bg-[#fffdf8] p-5 shadow-sm">
-          <h1 className="text-2xl font-semibold text-[#46281b]">
-            Your Cart
-          </h1>
-
-          <p className="mt-1 text-sm text-[#8a7863]">
-            {customerName} · {orderType}
-          </p>
 
           {cart.length === 0 ? (
             <div className="py-16 text-center text-sm text-[#8a7863]">
@@ -672,10 +865,13 @@ function CartScreen({
                     className="rounded-2xl border border-[#e6d8c3] bg-white p-4"
                   >
                     <div className="flex gap-3">
+
                       {item.image ? (
                         <img
                           src={`http://localhost/cafe-qr-ordering-system/backend/uploads/${item.image}`}
-                          alt={item.product_name}
+                          alt={
+                            item.product_name
+                          }
                           className="h-16 w-16 shrink-0 rounded-xl object-cover"
                         />
                       ) : (
@@ -683,6 +879,7 @@ function CartScreen({
                       )}
 
                       <div className="min-w-0 flex-1">
+
                         <div className="font-semibold text-[#3a2a1e]">
                           {item.product_name}
                         </div>
@@ -692,56 +889,78 @@ function CartScreen({
                           <div className="mt-1 text-xs text-[#8a7863]">
                             {item.customizations
                               .map(
-                                (option) =>
+                                (
+                                  option
+                                ) =>
                                   option.option_name
                               )
-                              .join(" · ")}
+                              .join(
+                                " · "
+                              )}
                           </div>
                         )}
 
                         {item.request && (
                           <div className="mt-1 text-xs text-[#8a7863]">
-                            Request: {item.request}
+                            Request:{" "}
+                            {
+                              item.request
+                            }
                           </div>
                         )}
 
                         <div className="mt-2 font-semibold text-[#5a3e32]">
-                          {peso(item.price)}
+                          {peso(
+                            item.price
+                          )}
                         </div>
                       </div>
 
                       <div className="text-right">
+
                         <div className="font-semibold text-[#3a2a1e]">
                           {peso(
-                            Number(item.price) *
-                              Number(item.quantity)
+                            Number(
+                              item.price
+                            ) *
+                              Number(
+                                item.quantity
+                              )
                           )}
                         </div>
 
                         <div className="mt-2 flex items-center justify-end gap-2">
+
                           <button
                             type="button"
                             onClick={() =>
-                              onDecrease(item.key)
+                              onDecrease(
+                                item.key
+                              )
                             }
-                            className="h-8 w-8 rounded-full bg-[#efe1cc]"
+                            className="h-8 w-8 rounded-lg bg-[#efe1cc]"
                           >
                             −
                           </button>
 
                           <span className="w-5 text-center text-sm">
-                            {item.quantity}
+                            {
+                              item.quantity
+                            }
                           </span>
 
                           <button
                             type="button"
                             onClick={() =>
-                              onIncrease(item.key)
+                              onIncrease(
+                                item.key
+                              )
                             }
-                            className="h-8 w-8 rounded-full bg-[#efe1cc]"
+                            className="h-8 w-8 rounded-lg bg-[#efe1cc]"
                           >
                             +
                           </button>
+
                         </div>
                       </div>
                     </div>
@@ -749,7 +968,9 @@ function CartScreen({
                     <button
                       type="button"
                       onClick={() =>
-                        onRemove(item.key)
+                        onRemove(
+                          item.key
+                        )
                       }
                       className="mt-3 text-xs font-medium text-red-600"
                     >
@@ -760,8 +981,10 @@ function CartScreen({
               </div>
 
               <div className="mt-5 border-t border-[#e6d8c3] pt-4">
+
                 <div className="flex items-center justify-between text-lg font-bold">
                   <span>Total</span>
+
                   <span className="text-[#5a3e32]">
                     {peso(total)}
                   </span>
@@ -769,11 +992,14 @@ function CartScreen({
 
                 <button
                   type="button"
-                  onClick={onCheckout}
-                  className="mt-4 w-full rounded-full bg-[#5a3e32] py-4 text-sm font-semibold text-white"
+                  onClick={
+                    onCheckout
+                  }
+                  className="mt-4 w-full rounded-xl bg-[#5a3e32] py-4 text-sm font-semibold text-white"
                 >
                   Proceed to Checkout
                 </button>
+
               </div>
             </>
           )}
@@ -782,6 +1008,11 @@ function CartScreen({
     </div>
   );
 }
+
+
+/* =========================================================
+   PAYMENT SCREEN
+========================================================= */
 
 function PaymentScreen({
   customerName,
@@ -795,131 +1026,259 @@ function PaymentScreen({
   onBack,
   onPlaceOrder,
 }) {
+  const handleProofUpload = (e) => {
+    const file = e.target.files?.[0] || null;
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file.");
+      e.target.value = "";
+      return;
+    }
+
+    setGcashProof(file);
+  };
+
+  const removeProof = () => {
+    setGcashProof(null);
+
+    const input = document.getElementById("gcash-proof");
+    if (input) {
+      input.value = "";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f7eee1]">
       <div className="mx-auto w-full max-w-2xl px-4 py-5 sm:px-6">
+
+        {/* Back */}
         <button
           type="button"
           onClick={onBack}
-          className="mb-5 text-sm font-medium text-[#8a7863]"
+          className="mb-8 flex items-center gap-2 text-sm font-medium text-[#8a7863]"
         >
-          ← Back to Cart
+          <span className="text-lg">‹</span>
+          Back
         </button>
 
-        <div className="rounded-3xl bg-[#fffdf8] p-5 shadow-sm">
-          <h1 className="text-2xl font-semibold text-[#46281b]">
+        {/* Header */}
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-[#2f2119]">
             Payment
           </h1>
 
           <p className="mt-1 text-sm text-[#8a7863]">
-            {customerName} · {orderType}
+            Choose how you'd like to pay.
           </p>
+        </div>
 
-          <div className="mt-5 rounded-2xl bg-[#efe1cc] p-4">
-            <div className="text-xs text-[#8a7863]">
-              ORDER TOTAL
+        {/* Order Summary */}
+        <div className="mt-8 rounded-2xl bg-[#efe5d8] px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-[#8a6f5c]">
+                {customerName} · {orderType}
+              </div>
+
+              <div className="text-xs text-[#8a6f5c]">
+                {cart.reduce(
+                  (sum, item) =>
+                    sum + Number(item.quantity || 0),
+                  0
+                )}{" "}
+                item
+                {cart.reduce(
+                  (sum, item) =>
+                    sum + Number(item.quantity || 0),
+                  0
+                ) !== 1
+                  ? "s"
+                  : ""}
+              </div>
             </div>
 
-            <div className="mt-1 text-2xl font-bold text-[#5a3e32]">
+            <div className="text-xl font-bold text-[#7b4d2e]">
               {peso(total)}
             </div>
+          </div>
+        </div>
 
-            <div className="mt-1 text-xs text-[#8a7863]">
-              {cart.reduce(
-                (sum, item) =>
-                  sum + Number(item.quantity),
-                0
-              )}{" "}
-              item(s)
+        {/* Payment Methods */}
+        <div className="mt-6 space-y-4">
+
+          {/* CASH */}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("Cash")}
+            className={`w-full rounded-2xl border p-5 text-left transition ${
+              paymentMethod === "Cash"
+                ? "border-[#7b4d2e] bg-white"
+                : "border-[#e0d8d0] bg-white"
+            }`}
+          >
+            <div className="flex items-center gap-4">
+
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#00a83b] text-white">
+                <span className="text-xl">▣</span>
+              </div>
+
+              <div className="flex-1">
+                <div className="font-semibold text-[#2f2119]">
+                  Cash
+                </div>
+
+                <div className="mt-1 text-xs text-[#8a6f5c]">
+                  Pay at the counter upon pickup
+                </div>
+              </div>
+
+              {paymentMethod === "Cash" && (
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7b4d2e] text-xs text-white">
+                  ✓
+                </div>
+              )}
             </div>
+          </button>
+
+          {/* GCASH */}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("GCash")}
+            className={`w-full rounded-2xl border p-5 text-left transition ${
+              paymentMethod === "GCash"
+                ? "border-[#7b4d2e] bg-[#f8f1e9]"
+                : "border-[#e0d8d0] bg-white"
+            }`}
+          >
+            <div className="flex items-start gap-4">
+
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#287df5] text-white">
+                <span className="text-xl">▯</span>
+              </div>
+
+              <div className="flex-1">
+                <div className="font-semibold text-[#2f2119]">
+                  GCash
+                </div>
+
+                <div className="mt-1 text-xs text-[#8a6f5c]">
+                  Pay via GCash +63 911 1111111
+                </div>
+              </div>
+
+              {paymentMethod === "GCash" && (
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7b4d2e] text-xs text-white">
+                  ✓
+                </div>
+              )}
+            </div>
+          </button>
+
+        </div>
+
+        {/* GCASH PAYMENT */}
+        {paymentMethod === "GCash" && (
+        <div className="mt-6 rounded-2xl border border-blue-300 bg-[#eef6ff] p-4">
+
+          <div className="text-sm font-semibold text-blue-700">
+            GCash Payment
           </div>
 
-          <div className="mt-6 space-y-3">
-            <button
-              type="button"
-              onClick={() =>
-                setPaymentMethod("Cash")
-              }
-              className={`w-full rounded-2xl border p-4 text-left ${
-                paymentMethod === "Cash"
-                  ? "border-[#5a3e32] bg-[#efe1cc]"
-                  : "border-[#e6d8c3] bg-white"
-              }`}
+          <p className="mt-1 text-xs leading-5 text-blue-600">
+            Tap again to change the uploaded image.
+          </p>
+
+          {/* CUSTOMER UPLOADS PROOF */}
+          {!gcashProof ? (
+            <label
+              htmlFor="gcash-proof"
+              className="mt-4 block cursor-pointer rounded-xl border border-dashed border-blue-300 bg-white p-4 text-center"
             >
-              <div className="font-semibold text-[#3a2a1e]">
-                Cash
+              <div className="text-sm font-medium text-blue-600">
+                Upload payment proof
               </div>
 
-              <div className="mt-1 text-xs text-[#8a7863]">
-                Pay at the counter upon pickup.
-              </div>
-            </button>
+              <input
+                id="gcash-proof"
+                type="file"
+                accept="image/*"
+                onChange={handleProofUpload}
+                className="hidden"
+              />
+            </label>
+          ) : (
+            /* IMAGE PREVIEW - CLICK IMAGE TO CHANGE */
+            <div className="relative mt-4">
 
-            <button
-              type="button"
-              onClick={() =>
-                setPaymentMethod("GCash")
-              }
-              className={`w-full rounded-2xl border p-4 text-left ${
-                paymentMethod === "GCash"
-                  ? "border-[#5a3e32] bg-[#efe1cc]"
-                  : "border-[#e6d8c3] bg-white"
-              }`}
-            >
-              <div className="font-semibold text-[#3a2a1e]">
-                GCash
-              </div>
-
-              <div className="mt-1 text-xs text-[#8a7863]">
-                Pay using GCash and upload your
-                payment proof.
-              </div>
-            </button>
-          </div>
-
-          {paymentMethod === "GCash" && (
-            <div className="mt-4 rounded-2xl border border-[#e6d8c3] bg-white p-4">
-              <div className="text-sm font-semibold text-[#46281b]">
-                GCash Payment
-              </div>
-
-              <p className="mt-1 text-xs leading-5 text-[#8a7863]">
-                After sending the payment, upload your
-                screenshot or receipt below for staff
-                verification.
-              </p>
-
-              <label className="mt-4 block cursor-pointer rounded-2xl border border-dashed border-[#9b8f82] bg-[#f7eee1] p-4 text-center text-sm text-[#5a3e32]">
-                {gcashProof
-                  ? gcashProof.name
-                  : "Choose payment proof"}
+              <label
+                htmlFor="gcash-proof"
+                className="block cursor-pointer overflow-hidden rounded-xl bg-white"
+              >
+                <img
+                  src={URL.createObjectURL(gcashProof)}
+                  alt="GCash payment proof"
+                  className="max-h-64 w-full object-contain"
+                />
 
                 <input
+                  id="gcash-proof"
                   type="file"
                   accept="image/*"
+                  onChange={handleProofUpload}
                   className="hidden"
-                  onChange={(e) =>
-                    setGcashProof(
-                      e.target.files?.[0] || null
-                    )
-                  }
                 />
               </label>
+
+              {/* REMOVE IMAGE */}
+              <button
+                type="button"
+                onClick={() => {
+                  setGcashProof(null);
+
+                  const input =
+                    document.getElementById("gcash-proof");
+
+                  if (input) {
+                    input.value = "";
+                  }
+                }}
+                className="absolute -right-2 -top-2 z-10"
+                aria-label="Remove payment proof"
+              >
+                <img
+                  src="/src/assets/remove-icon.png"
+                  alt="Remove"
+                  className="h-7 w-7"
+                />
+              </button>
+
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={onPlaceOrder}
-            className="mt-6 w-full rounded-full bg-[#5a3e32] py-4 text-sm font-semibold text-white"
-          >
-            Place Order · {peso(total)}
-          </button>
         </div>
+      )}
+
+      </div>
+
+      {/* PLACE ORDER AT BOTTOM */}
+      <div className="mx-auto w-full max-w-2xl px-4 pb-5 pt-6 sm:px-6">
+        <button
+          type="button"
+          onClick={onPlaceOrder}
+          className="w-full rounded-xl bg-[#7b4d2e] py-4 text-sm font-semibold text-white shadow-md transition hover:bg-[#684025] active:scale-[0.99]"
+        >
+          Place Order · {peso(total)}
+        </button>
       </div>
     </div>
   );
 }
+
+/* =========================================================
+   TRACKING SCREEN
+========================================================= */
 
 function TrackingScreen({
   order,
@@ -934,15 +1293,20 @@ function TrackingScreen({
     ["ready", "Ready for Pickup"],
   ];
 
-  const currentIndex = statuses.findIndex(
-    ([key]) => key === orderStatus
-  );
+  const currentIndex =
+    statuses.findIndex(
+      ([key]) =>
+        key === orderStatus
+    );
 
   return (
     <div className="min-h-screen bg-[#f7eee1]">
       <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6">
+
         <div className="rounded-3xl bg-[#fffdf8] p-5 shadow-sm">
+
           <div className="flex items-start justify-between">
+
             <div>
               <div className="text-xs text-[#8a7863]">
                 ORDER NUMBER
@@ -956,37 +1320,52 @@ function TrackingScreen({
             <div className="rounded-full bg-[#efe1cc] px-3 py-1 text-xs font-medium text-[#5a3e32]">
               {order.type}
             </div>
+
           </div>
 
           <div className="mt-6 rounded-2xl bg-[#efe1cc] p-4">
+
             <div className="font-semibold text-[#46281b]">
-              {orderStatus === "placed"
+              {orderStatus ===
+              "placed"
                 ? "Order Placed!"
-                : orderStatus === "preparing"
+                : orderStatus ===
+                  "preparing"
                 ? "Preparing your order"
                 : "Ready!"}
             </div>
 
             <div className="mt-1 text-xs text-[#8a7863]">
-              {orderStatus === "placed"
+              {orderStatus ===
+              "placed"
                 ? "We've received your order."
-                : orderStatus === "preparing"
+                : orderStatus ===
+                  "preparing"
                 ? "Our staff is preparing your order."
                 : "Your order is ready for pickup."}
             </div>
+
           </div>
 
           <div className="mt-6">
+
             {statuses.map(
-              ([key, label], index) => {
-                const done = index <= currentIndex;
+              (
+                [key, label],
+                index
+              ) => {
+                const done =
+                  index <=
+                  currentIndex;
 
                 return (
                   <div
                     key={key}
                     className="flex gap-3"
                   >
+
                     <div className="flex flex-col items-center">
+
                       <div
                         className={`flex h-7 w-7 items-center justify-center rounded-full text-xs ${
                           done
@@ -994,11 +1373,14 @@ function TrackingScreen({
                             : "bg-[#efe1cc] text-[#9c8873]"
                         }`}
                       >
-                        {done ? "✓" : "○"}
+                        {done
+                          ? "✓"
+                          : "○"}
                       </div>
 
                       {index <
-                        statuses.length - 1 && (
+                        statuses.length -
+                          1 && (
                         <div
                           className={`min-h-8 w-px ${
                             index <
@@ -1008,9 +1390,11 @@ function TrackingScreen({
                           }`}
                         />
                       )}
+
                     </div>
 
                     <div className="pb-5">
+
                       <div
                         className={`text-sm font-medium ${
                           done
@@ -1030,57 +1414,85 @@ function TrackingScreen({
                           ? "In progress"
                           : "Waiting"}
                       </div>
+
                     </div>
                   </div>
                 );
               }
             )}
+
           </div>
 
           <div className="mt-2 rounded-2xl border border-[#e6d8c3] bg-white p-4">
+
             <div className="text-xs font-semibold tracking-wide text-[#9c8873]">
               ORDER SUMMARY
             </div>
 
             <div className="mt-3 space-y-2">
-              {order.items.map((item) => (
-                <div
-                  key={item.key}
-                  className="flex justify-between gap-3 text-sm"
-                >
-                  <span>
-                    {item.product_name} ×
-                    {item.quantity}
-                  </span>
 
-                  <span className="font-medium">
-                    {peso(
-                      Number(item.price) *
-                        Number(item.quantity)
-                    )}
-                  </span>
-                </div>
-              ))}
+              {order.items.map(
+                (item) => (
+                  <div
+                    key={item.key}
+                    className="flex justify-between gap-3 text-sm"
+                  >
+
+                    <span>
+                      {
+                        item.product_name
+                      }{" "}
+                      ×
+                      {
+                        item.quantity
+                      }
+                    </span>
+
+                    <span className="font-medium">
+                      {peso(
+                        Number(
+                          item.price
+                        ) *
+                          Number(
+                            item.quantity
+                          )
+                      )}
+                    </span>
+
+                  </div>
+                )
+              )}
+
             </div>
 
             <div className="mt-3 flex justify-between border-t border-[#e6d8c3] pt-3 font-semibold">
+
               <span>Total</span>
 
               <span className="text-[#5a3e32]">
-                {peso(order.total)}
+                {peso(
+                  order.total
+                )}
               </span>
+
             </div>
 
             <div className="mt-3 border-t border-[#e6d8c3] pt-3 text-xs text-[#8a7863]">
-              Payment · {order.paymentMethod} ·{" "}
-              {paymentStatus}
+              Payment ·{" "}
+              {
+                order.paymentMethod
+              }{" "}
+              · {paymentStatus}
             </div>
+
           </div>
 
           <button
             type="button"
-            onClick={onOrderMore}
-            className="mt-5 w-full rounded-full bg-[#5a3e32] py-4 text-sm font-semibold text-white"
+            onClick={
+              onOrderMore
+            }
+            className="mt-5 w-full rounded-xl bg-[#5a3e32] py-4 text-sm font-semibold text-white"
           >
             Order More Items
           </button>
@@ -1088,10 +1500,11 @@ function TrackingScreen({
           <button
             type="button"
             onClick={onDone}
-            className="mt-2 w-full rounded-full bg-[#d9c6ac] py-4 text-sm font-semibold text-[#46281b]"
+            className="mt-2 w-full rounded-xl bg-[#d9c6ac] py-4 text-sm font-semibold text-[#46281b]"
           >
             Done
           </button>
+
         </div>
       </div>
     </div>

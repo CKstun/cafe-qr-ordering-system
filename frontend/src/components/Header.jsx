@@ -8,8 +8,8 @@ function Header({
   onCart,
 }) {
   return (
-    <header className="sticky top-0 z-30 bg-[#f7eee1]/95 px-4 pb-3 pt-4 backdrop-blur sm:px-6">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-3xl bg-[#fffdf8] px-3 py-3 shadow-sm ring-1 ring-[#e6d8c3]">
+    <header className="sticky top-0 z-30 bg-[#f7eee1] px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-6xl items-center gap-3">
         <img
           src={logo}
           alt="Café Pepita Logo"
@@ -17,12 +17,12 @@ function Header({
         />
 
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-semibold text-[#46281b]">
+          <h1 className="truncate text-lg font-semibold text-black">
             Café Pepita
           </h1>
 
           <p className="truncate text-xs text-[#8a7863]">
-            {customerName || "Guest"} ·{" "}
+            {customerName || "Guest"} • {" "}
             {orderType}
           </p>
         </div>
@@ -30,7 +30,7 @@ function Header({
         <button
           type="button"
           onClick={onCart}
-          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#5a3e32]"
+          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black"
         >
           <img
             src={cartIcon}
