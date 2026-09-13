@@ -105,12 +105,7 @@ function App() {
   }, []);
 
   const cartCount = useMemo(
-    () =>
-      cart.reduce(
-        (total, item) =>
-          total + Number(item.quantity || 0),
-        0
-      ),
+    () => cart.length,
     [cart]
   );
 
@@ -212,24 +207,43 @@ function App() {
   const addSimpleItem = (item) => {
     const basePrice = Number(item.price || 0);
 
-    setCart((current) => [
-      ...current,
-      {
-        key: `${item.menu_item_id}-${Date.now()}-${Math.random()}`,
-        menu_item_id: item.menu_item_id,
-        product_name: item.product_name,
-        image: item.image,
-        description: item.description,
-        price: basePrice,
-        quantity: 1,
-        customizations: [],
-        request: "",
-      },
-    ]);
+    setCart((current) => {
+      const existingItem = current.find(
+        (cartItem) =>
+          cartItem.menu_item_id === item.menu_item_id &&
+          cartItem.customizations?.length === 0 &&
+          !cartItem.request
+      );
 
-    showToast(
-      `Added ${item.product_name} to cart`
-    );
+      if (existingItem) {
+        return current.map((cartItem) =>
+          cartItem.key === existingItem.key
+            ? {
+                ...cartItem,
+                quantity:
+                  Number(cartItem.quantity || 0) + 1,
+              }
+            : cartItem
+        );
+      }
+
+      return [
+        ...current,
+        {
+          key: `${item.menu_item_id}-${Date.now()}-${Math.random()}`,
+          menu_item_id: item.menu_item_id,
+          product_name: item.product_name,
+          image: item.image,
+          description: item.description,
+          price: basePrice,
+          quantity: 1,
+          customizations: [],
+          request: "",
+        },
+      ];
+    });
+
+    showToast("Item successfully added to cart");
   };
 
   const handleAddCustomizedToCart = (
@@ -245,10 +259,8 @@ function App() {
         ([group, value]) =>
           group !== "request" &&
           value &&
-          ((Array.isArray(value) &&
-            value.length > 0) ||
-            (!Array.isArray(value) &&
-              typeof value === "object"))
+          ((Array.isArray(value) && value.length > 0) ||
+            (!Array.isArray(value) && typeof value === "object"))
       )
       .flatMap(([group, value]) => {
         if (Array.isArray(value)) {
@@ -266,28 +278,67 @@ function App() {
         ];
       });
 
-    setCart((current) => [
-      ...current,
-      {
-        key: `${item.menu_item_id}-${Date.now()}-${Math.random()}`,
-        menu_item_id: item.menu_item_id,
-        product_name: item.product_name,
-        image: item.image,
-        description: item.description,
-        price: Number(finalPrice || 0),
-        quantity: Number(quantity || 1),
-        customizations: customizationList,
-        request: selectedOptions.request || "",
-      },
-    ]);
+    const request = selectedOptions.request || "";
+
+    setCart((current) => {
+      const existingItem = current.find((cartItem) => {
+        if (cartItem.menu_item_id !== item.menu_item_id) {
+          return false;
+        }
+
+        if ((cartItem.request || "") !== request) {
+          return false;
+        }
+
+        const oldCustomizations = cartItem.customizations || [];
+
+        if (oldCustomizations.length !== customizationList.length) {
+          return false;
+        }
+
+        return customizationList.every((newOption) =>
+          oldCustomizations.some(
+            (oldOption) =>
+              oldOption.option_name === newOption.option_name &&
+              oldOption.selected_group === newOption.selected_group
+          )
+        );
+      });
+
+      if (existingItem) {
+        return current.map((cartItem) =>
+          cartItem.key === existingItem.key
+            ? {
+                ...cartItem,
+                quantity:
+                  Number(cartItem.quantity || 0) +
+                  Number(quantity || 1),
+              }
+            : cartItem
+        );
+      }
+
+      return [
+        ...current,
+        {
+          key: `${item.menu_item_id}-${Date.now()}-${Math.random()}`,
+          menu_item_id: item.menu_item_id,
+          product_name: item.product_name,
+          image: item.image,
+          description: item.description,
+          price: Number(finalPrice || 0),
+          quantity: Number(quantity || 1),
+          customizations: customizationList,
+          request,
+        },
+      ];
+    });
 
     setSelectedItem(null);
     setCustomizations([]);
     setSelections({});
 
-    showToast(
-      `Added ${item.product_name} to cart`
-    );
+    showToast("Item successfully added to cart");
   };
 
   const increaseQuantity = (key) => {
@@ -414,18 +465,21 @@ function App() {
 
   const cancelOrder = () => {
     if (orderStatus !== "placed") {
+      showToast("Cannot cancel order at this stage.");
       return;
     }
 
     setOrder(null);
     setOrderStatus("placed");
     setPaymentStatus("Unpaid");
-    setScreen("menu");
+
+    setScreen("cart");
 
     showToast("Order cancelled.");
   };
 
   const orderMore = () => {
+    setCart([]); // Clear the completed order from cart
     setScreen("menu");
     setOrder(null);
     setOrderStatus("placed");
@@ -529,17 +583,6 @@ function App() {
                   }
                 />
 
-                {/* Dessert category */}
-                {selectedCategory ===
-                  "Desserts" && (
-                  <div className="mt-5 rounded-3xl bg-[#efe1cc] p-4">
-                    <div className="text-center">
-                      <h2 className="font-semibold text-[#46281b]">
-                        Desserts
-                      </h2>
-                    </div>
-                  </div>
-                )}
 
                 {loading && (
                   <p className="py-12 text-center text-sm text-[#8a7863]">
@@ -1359,16 +1402,41 @@ function TrackingScreen({
           </div>
 
           {/* STATUS MESSAGE */}
-          <div className="mt-6 rounded-2xl bg-[#efe1cc] p-4">
-            <div className="font-semibold text-[#46281b]">
+          <div
+            className={`mt-6 rounded-2xl p-4 ${
+              orderStatus === "ready"
+                ? "border border-green-500 bg-green-50"
+                : "bg-[#efe1cc]"
+            }`}
+          >
+            <div
+              className={`font-semibold ${
+                orderStatus === "ready"
+                  ? "text-green-600"
+                  : "text-[#46281b]"
+              }`}
+            >
               {orderStatus === "placed"
                 ? "Order Placed!"
                 : orderStatus === "preparing"
                 ? "Preparing your order"
-                : "Ready!"}
+                : (
+                  <span className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">
+                      ✓
+                    </span>
+                    Ready!
+                  </span>
+                )}
             </div>
 
-            <div className="mt-1 text-xs text-[#8a7863]">
+            <div
+              className={`mt-1 text-xs ${
+                orderStatus === "ready"
+                  ? "text-green-600"
+                  : "text-[#8a7863]"
+              }`}
+            >
               {orderStatus === "placed"
                 ? "We've received your order."
                 : orderStatus === "preparing"
