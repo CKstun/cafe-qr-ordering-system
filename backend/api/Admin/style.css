@@ -1,0 +1,691 @@
+:root {
+  --coffee: #3b201a;
+  --tan: #a47a59;
+  --cream: #f5f5dc;
+  --line: #dfd2c2;
+  --ink: #241b17;
+  --muted: #89796f;
+  --white: #fff;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font:
+    14px Arial,
+    sans-serif;
+  color: var(--ink);
+  background: var(--cream);
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #a47a59;
+  outline-offset: 2px;
+}
+#login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: var(--cream);
+}
+.loginbox {
+  background: white;
+  padding: 30px;
+  border: 1px solid var(--line);
+  width: min(410px, 100%);
+}
+.brand {
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--coffee);
+}
+.login-logo-wrap {
+  text-align: center;
+  margin-bottom: 10px;
+}
+.login-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  display: inline-block;
+}
+.loginbox h1 {
+  font-size: 24px;
+}
+.loginbox form {
+  display: grid;
+  gap: 12px;
+}
+.loginbox label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+}
+input,
+select {
+  padding: 11px;
+  border: 1px solid #d8c9b8;
+  background: white;
+  min-width: 0;
+}
+button.primary {
+  background: var(--coffee);
+  color: white;
+  border: 1px solid var(--coffee);
+  padding: 11px 15px;
+}
+button.outline {
+  background: white;
+  border: 1px solid var(--line);
+  color: var(--coffee);
+  padding: 9px 13px;
+}
+button.danger {
+  background: #9b3d31;
+  color: white;
+  border: 0;
+  padding: 8px 10px;
+}
+.hidden {
+  display: none !important;
+}
+.app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 225px minmax(0, 1fr);
+}
+aside {
+  background: var(--coffee);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+aside .brand {
+  color: white;
+  padding: 25px 20px 22px;
+  border-bottom: 1px solid #ffffff20;
+}
+aside .brand small {
+  display: block;
+  color: #bca99e;
+  letter-spacing: 0;
+  font-weight: normal;
+  margin-top: 5px;
+}
+.side-nav {
+  padding: 20px 12px;
+  display: grid;
+  gap: 4px;
+}
+.side-nav button {
+  background: transparent;
+  color: #c8b8ae;
+  text-align: left;
+  border: 0;
+  padding: 12px;
+  border-radius: 0;
+}
+.side-nav button.active {
+  background: var(--tan);
+  color: #201612;
+}
+.side-bottom {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid #ffffff20;
+}
+.side-bottom button {
+  width: 100%;
+}
+main {
+  min-width: 0;
+}
+.topbar {
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--line);
+  min-height: 60px;
+  flex-wrap: wrap;
+}
+.top-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+.top-title span {
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--muted);
+}
+.tabs {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+.tabs button {
+  background: white;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: #927965;
+  padding: 21px 16px;
+  white-space: nowrap;
+}
+.tabs button.active {
+  border-bottom-color: var(--coffee);
+  color: var(--coffee);
+}
+.content {
+  padding: 28px 32px;
+  max-width: 1500px;
+  margin: auto;
+}
+.pagehead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.pagehead h1 {
+  font-size: 22px;
+  margin: 0 0 5px;
+}
+.sub {
+  color: var(--muted);
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.metric {
+  background: white;
+  border: 1px solid var(--line);
+  padding: 18px;
+}
+.metric .label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+}
+.metric strong {
+  display: block;
+  font-size: 25px;
+  margin-top: 9px;
+}
+.toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.toolbar input {
+  width: min(260px, 100%);
+}
+.filter.active {
+  background: var(--coffee);
+  color: white;
+  border-color: var(--coffee);
+}
+.tablebox {
+  background: white;
+  border: 1px solid var(--line);
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+th {
+  background: var(--coffee);
+  color: #cdb9a9;
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 15px 16px;
+}
+td {
+  padding: 15px 16px;
+  border-bottom: 1px solid #eee7d8;
+}
+tr:last-child td {
+  border-bottom: 0;
+}
+.sku {
+  font: 12px monospace;
+  color: var(--muted);
+}
+.status {
+  display: inline-block;
+  padding: 5px 9px;
+  background: #d8f6e7;
+  color: #155d3a;
+  font-size: 12px;
+}
+.status.low {
+  background: #fff0c3;
+  color: #755000;
+}
+.qtybar {
+  display: inline-block;
+  width: 56px;
+  height: 6px;
+  background: #cbb79f;
+  margin-left: 9px;
+  vertical-align: middle;
+}
+.qtybar i {
+  display: block;
+  height: 100%;
+  background: #6e4c3a;
+}
+.category-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(250px, 0.9fr);
+  gap: 24px;
+}
+.category-list {
+  background: white;
+  border: 1px solid var(--line);
+}
+.category-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee7d8;
+}
+.usage {
+  background: var(--coffee);
+  color: #e8d9cb;
+  padding: 24px;
+}
+.usage-row {
+  margin-top: 18px;
+  font-size: 12px;
+}
+.track {
+  height: 6px;
+  background: #604239;
+  margin-top: 7px;
+}
+.track i {
+  display: block;
+  background: var(--tan);
+  height: 100%;
+}
+.toggle {
+  width: 40px;
+  height: 22px;
+  border: 0;
+  border-radius: 20px;
+  background: #c9b9aa;
+  padding: 3px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+.toggle i {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 2px #0002;
+  transition: transform 0.15s;
+}
+.toggle.on {
+  background: #6e4c3a;
+}
+.toggle.on i {
+  transform: translateX(18px);
+}
+.row-actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.row-actions button {
+  font-size: 12px;
+  padding: 7px 9px;
+}
+.empty {
+  padding: 22px;
+  color: var(--muted);
+}
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  aside {
+    min-height: 0;
+  }
+  .side-nav {
+    display: flex;
+    overflow-x: auto;
+    padding: 8px;
+  }
+  .side-nav button {
+    white-space: nowrap;
+  }
+  .side-bottom {
+    padding: 8px 12px;
+  }
+  .topbar {
+    padding: 0 14px;
+  }
+  .content {
+    padding: 20px;
+  }
+  .category-layout {
+    grid-template-columns: 1fr;
+  }
+  .metrics {
+    gap: 10px;
+  }
+}
+@media (max-width: 520px) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+  .content {
+    padding: 14px;
+  }
+  .topbar {
+    align-items: flex-start;
+  }
+  .tabs {
+    width: 100%;
+  }
+  .tabs button {
+    padding: 13px 10px;
+  }
+  .pagehead h1 {
+    font-size: 20px;
+  }
+}
+
+/* Inventory stock history and adjustment dialogs */
+.inventory-head-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.stock-modal-backdrop { position:fixed; inset:0; z-index:10000; display:grid; place-items:center; padding:18px; background:rgba(24,14,11,.58); }
+.stock-modal { width:min(680px,100%); max-height:min(82vh,760px); overflow:auto; background:#fffdf9; border:1px solid var(--line); border-radius:12px; box-shadow:0 18px 55px rgba(0,0,0,.25); color:var(--ink); }
+.stock-modal-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 22px; border-bottom:1px solid var(--line); background:#fbf5ed; }
+.stock-modal-header h2 { margin:0; font-size:20px; }
+.stock-modal-close { border:0; background:transparent; color:var(--coffee); font-size:28px; line-height:1; padding:0 4px; }
+.stock-modal-body { padding:20px 22px 22px; }
+.stock-modal-hint { color:var(--muted); margin:0 0 18px; line-height:1.5; }
+.stock-modal-form { display:grid; gap:14px; }
+.stock-modal-form label { display:grid; gap:7px; font-weight:600; }
+.stock-modal-form input,.stock-modal-form select,.stock-modal-form textarea { width:100%; border:1px solid #d8c9b8; border-radius:6px; padding:11px 12px; font:inherit; background:#fff; }
+.stock-modal-actions { display:flex; justify-content:flex-end; gap:9px; flex-wrap:wrap; margin-top:8px; }
+.stock-modal-actions button { min-width:96px; }
+.stock-adjust-list { display:grid; gap:8px; }
+.stock-adjust-choice { display:flex; justify-content:space-between; align-items:center; gap:12px; text-align:left; border:1px solid var(--line); border-radius:8px; background:white; padding:12px 14px; color:var(--coffee); }
+.stock-adjust-choice small { display:block; margin-top:4px; color:var(--muted); font-weight:normal; }
+.stock-history-table-wrap { overflow-x:auto; }
+.stock-history-table { width:100%; border-collapse:collapse; font-size:13px; }
+.stock-history-table th,.stock-history-table td { text-align:left; padding:10px 9px; border-bottom:1px solid var(--line); white-space:nowrap; }
+.stock-history-table th { color:var(--muted); font-size:11px; letter-spacing:.06em; }
+.stock-history-table td:last-child { white-space:normal; min-width:100px; }
+.stock-history-type { display:inline-block; border-radius:20px; background:#f2e7d9; color:var(--coffee); padding:4px 8px; }
+.stock-empty { text-align:center!important; color:var(--muted); padding:24px!important; }
+.stock-success-mark { display:grid; place-items:center; width:44px; height:44px; margin:0 auto 12px; border-radius:50%; background:#e6f3e7; color:#28733a; font-size:26px; font-weight:bold; }
+@media(max-width:600px) { .stock-modal-body { padding:16px; } .stock-modal-header { padding:15px 16px; } }
+
+.stock-history-section { margin-top: 18px; }
+.stock-history-section h3 { display:flex; align-items:center; gap:9px; margin:0 0 9px; color:var(--coffee); font-size:14px; font-weight:700; }
+.stock-history-section h3 span { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 7px; border-radius:999px; background:#f2e7d9; color:var(--coffee); font-size:11px; }
+.stock-history-section + .stock-history-section { padding-top:14px; border-top:1px solid var(--line); }
+
+.status.new-stock {
+  background: #e7efff;
+  color: #244d91;
+}
+
+/* Inventory controls: compact, aligned buttons while keeping Stock History, Adjust, and New Stock. */
+.inventory-head-actions,
+.row-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.inventory-head-actions {
+  justify-content: flex-end;
+}
+
+.inventory-head-actions button,
+.row-actions button,
+#stockHistoryBtn,
+#addStock,
+button[data-adjust],
+button[data-stock-adjust] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-width: 0 !important;
+  width: auto !important;
+  height: 34px;
+  min-height: 34px;
+  margin: 0 !important;
+  padding: 0 11px !important;
+  font-size: 13px !important;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 4px;
+}
+
+.row-actions {
+  justify-content: flex-start;
+}
+
+#stockTable td {
+  vertical-align: middle;
+}
+
+#stockTable td:last-child {
+  min-width: 230px;
+}
+
+.new-stock-qty {
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .inventory-head-actions {
+    justify-content: flex-start;
+  }
+
+  #stockTable td:last-child {
+    min-width: 0;
+  }
+}
+
+/* Header + sidebar navigation refinements based on the reference design. */
+.topbar {
+  min-height: 74px;
+  padding: 0 34px;
+  flex-wrap: nowrap;
+}
+.tabs {
+  overflow: visible;
+  margin-left: auto;
+}
+.top-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 15px;
+  white-space: nowrap;
+}
+.top-user-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+.top-user-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.side-nav button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 14px;
+}
+.nav-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+}
+.nav-icon svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.nav-label {
+  min-width: 0;
+}
+
+/* Inventory pagination matching the compact controls in the reference. */
+.inventory-tablebox {
+  overflow: hidden;
+}
+.inventory-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  background: #fff;
+}
+.inventory-count {
+  color: var(--muted);
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-btn {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--coffee);
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+}
+.page-btn.current {
+  background: var(--coffee);
+  border-color: var(--coffee);
+  color: #fff;
+  font-size: 16px;
+}
+.page-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    min-height: 64px;
+    padding: 0 16px;
+  }
+  .tabs {
+    width: auto;
+  }
+  .inventory-pagination {
+    flex-wrap: wrap;
+  }
+}
+
+
+/* Compact Sales Reports buttons + Café Pepita sidebar logo. */
+aside .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+}
+.sidebar-logo {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  flex: 0 0 46px;
+  display: block;
+}
+.sidebar-brand-text {
+  min-width: 0;
+}
+.sidebar-brand-text strong {
+  display: block;
+  color: white;
+  letter-spacing: 2px;
+  font-size: 15px;
+  line-height: 1.2;
+}
+.sidebar-brand-text small {
+  display: block;
+  color: #bca99e;
+  letter-spacing: 0;
+  font-weight: normal;
+  margin-top: 5px;
+  font-size: 11px;
+}
+.toolbar #generate,
+.toolbar #csv {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 13px;
+  font-size: 13px;
+  line-height: 1;
+  margin-top: 16px;
+  box-sizing: border-box;
+}
+@media (max-width: 760px) {
+  .toolbar #generate,
+  .toolbar #csv {
+    margin-top: 0;
+  }
+}
