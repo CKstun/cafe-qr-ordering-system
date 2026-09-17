@@ -398,10 +398,18 @@ function CustomizationModal({
 
         <div className="px-5 pb-8 pt-5">
           {/* =========================
-              1. SIZE
-              2. FLAVOR
-              3. ADD-ONS
-              ========================= */}
+            PREDEFINED CUSTOMIZATIONS
+            ========================= */}
+
+          {/* {orderedGroups.length === 0 && (
+            // <div className="mb-6 rounded-2xl bg-[#efe5d8] p-4">
+
+            //   <p className="mt-1 text-xs leading-5 text-[#8a6d5a]">
+            //     You may add a special request below and adjust the quantity.
+            //   </p>
+            // </div>
+          )} */}
+
           {orderedGroups.map(([group, options]) => {
             const isSize = PRICE_REPLACING_GROUPS.includes(
               group

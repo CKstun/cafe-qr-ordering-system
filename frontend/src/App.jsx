@@ -181,11 +181,6 @@ function App() {
         ? result.data
         : [];
 
-      if (options.length === 0) {
-        addSimpleItem(item);
-        return;
-      }
-
       setSelectedItem(item);
       setCustomizations(options);
       setSelections({});
